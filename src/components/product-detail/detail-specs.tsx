@@ -5,8 +5,8 @@ import { motion } from "motion/react";
 import { modelById, type ModelId } from "@/data/airguard-models";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { type } from "@/components/products/type";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /*
  * Specifications, presented as a technical drawing: the product on a fine grid with dimension

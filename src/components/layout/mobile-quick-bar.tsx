@@ -9,6 +9,8 @@ import { modelById, salesPhone } from "@/data/airguard-models";
 import { BOOK_STORE_URL } from "@/data/book-store";
 import { flyToCart } from "@/lib/fly-to-cart";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
+import { EASE } from "@/lib/motion";
+import { useT } from "@/i18n/locale";
 
 /*
  * Phones only: a slim action bar pinned to the bottom of the screen, so a way to buy or ask is
@@ -57,6 +59,13 @@ const HOME: Record<string, Context | null> = {
     primary: { label: "Enquire", href: quote("king-hydrogen"), icon: "ask" },
     secondary: call,
   },
+  // King Hydrogen → Arcane Herb bridge
+  relay: {
+    title: "Better together",
+    note: "King Hydrogen · Arcane Herb",
+    primary: { label: "Ask about pairing", href: quote("king-hydrogen"), icon: "ask" },
+    secondary: call,
+  },
   "book-store": {
     title: "Book Store",
     note: "Orrington Publishing",
@@ -103,10 +112,11 @@ function ActionButton({ action, primary }: { action: Action; primary?: boolean }
   const cls = primary
     ? "inline-flex h-11 items-center justify-center gap-2 rounded-full bg-brand-500 px-4 text-sm font-medium text-white shadow-[0_10px_24px_-12px_rgba(64,103,177,0.85)] active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
     : "inline-flex h-11 items-center justify-center gap-1.5 rounded-full border border-navy/15 px-3.5 text-sm font-medium text-navy active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 dark:border-white/15 dark:text-white";
+  const t = useT();
   const body = (
     <>
       <Icon name={action.icon} />
-      {action.label}
+      {t(action.label)}
     </>
   );
   if (action.onClick) {
@@ -133,6 +143,7 @@ function ActionButton({ action, primary }: { action: Action; primary?: boolean }
 export function MobileQuickBar() {
   const pathname = usePathname();
   const reduce = useMotionPreference();
+  const t = useT();
   const isHome = pathname === "/";
   const [section, setSection] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -158,17 +169,42 @@ export function MobileQuickBar() {
   // Home page: which brand section holds the middle of the screen.
   useEffect(() => {
     if (!isHome) return;
-    const els = Object.keys(HOME)
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => !!el);
+    // The sections mount (and can be re-rendered) after the intro loader, so keep the observed
+    // elements in step with the live ones.
+    let els: HTMLElement[] = [];
+    // A pinned section (Handoff) stays "on screen" behind the ones rising over it, so of the
+    // sections at mid-screen, the one latest in the page wins.
+    const live = new Set<HTMLElement>();
     const io = new IntersectionObserver(
       (entries) => {
-        for (const e of entries) if (e.isIntersecting) setSection(e.target.id);
+        for (const e of entries) {
+          if (e.isIntersecting) live.add(e.target as HTMLElement);
+          else live.delete(e.target as HTMLElement);
+        }
+        const last = els.filter((el) => live.has(el)).pop();
+        if (last) setSection(last.id);
       },
       { rootMargin: "-45% 0px -45% 0px" }
     );
-    els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    const ids = Object.keys(HOME);
+    const attach = () => {
+      const found = ids
+        .map((id) => document.getElementById(id))
+        .filter((el): el is HTMLElement => !!el)
+        .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+      els.filter((el) => !found.includes(el)).forEach((el) => {
+        io.unobserve(el);
+        live.delete(el);
+      });
+      found.filter((el) => !els.includes(el)).forEach((el) => io.observe(el));
+      els = found;
+    };
+    const timer = setInterval(attach, 1000);
+    attach();
+    return () => {
+      clearInterval(timer);
+      io.disconnect();
+    };
   }, [isHome]);
 
   const ctx = isHome ? (section ? HOME[section] : AIRGUARD) : contextFor(pathname);
@@ -182,12 +218,12 @@ export function MobileQuickBar() {
           initial={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           exit={reduce ? { opacity: 0 } : { opacity: 0, y: 24 }}
-          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.35, ease: EASE }}
           className="fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom,0px))] z-40 md:hidden"
         >
           <div
             role="region"
-            aria-label="Quick actions"
+            aria-label={t("Quick actions")}
             className="flex items-center gap-2 rounded-full border border-navy/10 bg-white/90 py-1.5 pl-4 pr-1.5 shadow-[0_18px_40px_-18px_rgba(23,34,54,0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-[#101b30]/90"
           >
             {/* Re-keyed per context so the new name fades in (no exit step, so it can't lag behind). */}
@@ -198,8 +234,8 @@ export function MobileQuickBar() {
               transition={{ duration: 0.25 }}
               className="min-w-0 flex-1"
             >
-              <p className="truncate text-sm font-medium leading-tight text-navy dark:text-white">{ctx.title}</p>
-              <p className="truncate text-[11px] leading-tight text-muted-foreground">{ctx.note}</p>
+              <p className="truncate text-sm font-medium leading-tight text-navy dark:text-white">{t(ctx.title)}</p>
+              <p className="truncate text-[11px] leading-tight text-muted-foreground">{t(ctx.note)}</p>
             </motion.div>
             <ActionButton action={ctx.secondary} />
             <ActionButton action={ctx.primary} primary />

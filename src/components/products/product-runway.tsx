@@ -1,18 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, LayoutGroup, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, ArrowUpRight, FlaskConical, Hand, Pause, Play } from "lucide-react";
+import { ArrowRight, ArrowUpRight, FlaskConical, Hand, Pause, Play, Rotate3d, X } from "lucide-react";
 import { productsMenu } from "@/data/products-menu";
 import { airguardModels, type ModelId } from "@/data/airguard-models";
 import { formatUsd } from "@/lib/cart";
+import { BOOK_STORE_URL } from "@/data/book-store";
 import { AddToCart } from "@/components/cart/add-to-cart";
 import { type } from "@/components/products/type";
 import { ModelViewer } from "@/components/products/model-viewer";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { cn } from "@/lib/utils";
+import { EASE } from "@/lib/motion";
 
 /*
  * The products runway: AirGuard models standing on a turning 3D ring, adapted from the
@@ -27,14 +30,15 @@ import { cn } from "@/lib/utils";
  *
  * Clicking a model (or "View in 3D" in the panel) opens its 3D model right in the stage: the
  * ring blurs away and the model is revealed in a circle growing from the click point. The
- * "Explore products" bar (or Escape) closes it back to the ring.
+ * viewer has a close button (or Escape), a model switcher to swap the 3D model in place, and
+ * links to the full details. A "View in 3D" button over the front model makes the 3D view
+ * discoverable on touch screens and for anyone who never hovers a model.
  *
  * Positions are written straight to the DOM from one rAF loop (no React state per frame).
  */
 
 type BrandId = "airguard" | "king-hydrogen" | "arcane-herb" | "book-store";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 const MODELS = airguardModels;
 const n = MODELS.length;
 /** Bodies on the ring: the models repeated so the ring always looks full. */
@@ -102,6 +106,16 @@ export function ProductRunway() {
     setViewing({ id, x, y, r: Math.hypot(Math.max(x, r.width - x), Math.max(y, r.height - y)) + 20 });
   };
   const closeViewer = () => setViewing(null);
+  const chooseBrand = (b: BrandId) => {
+    setBrand(b);
+    setViewing(null);
+    if (b === "airguard") setCycle((c) => c + 1);
+  };
+  /** Swap the open 3D model in place and keep the ring in step with it. */
+  const switchViewer = (i: number) => {
+    setViewing((v) => (v ? { ...v, id: MODELS[i].id } : v));
+    api.current?.go(i);
+  };
   const openRef = useRef(openViewer);
   useEffect(() => {
     openRef.current = openViewer;
@@ -341,7 +355,7 @@ export function ProductRunway() {
         cur.y = cur.ty;
         el.dataset.on = "1";
       }
-      const overBody = (ev.target as HTMLElement).closest?.<HTMLElement>("[data-rw-body]");
+      const overBody = (ev.target as HTMLElement).closest?.<HTMLElement>("[data-rw-body], [data-rw-view]");
       el.dataset.mode = holds.current.dragging ? "grab" : overBody ? "view" : "drag";
       if (!cur.raf) cur.raf = requestAnimationFrame(followCursor);
     }
@@ -393,12 +407,19 @@ export function ProductRunway() {
         {/* ── Left: head, stage, controls ── */}
         <div className="relative flex min-w-0 flex-col">
           <div className="relative z-10 flex flex-col gap-5 px-5 pt-6 md:px-10 lg:px-14 lg:pt-8">
+            {/* ?brand= (from the header menu) picks the family; under Suspense so the page still prerenders */}
+            <Suspense fallback={null}>
+              <BrandFromUrl onBrand={chooseBrand} />
+            </Suspense>
             <BrandPills
               brand={brand}
               onChange={(b) => {
-                setBrand(b);
-                setViewing(null);
-                if (b === "airguard") setCycle((c) => c + 1);
+                chooseBrand(b);
+                // keep the address shareable without a navigation
+                const url = new URL(window.location.href);
+                if (b === "airguard") url.searchParams.delete("brand");
+                else url.searchParams.set("brand", b);
+                window.history.replaceState(window.history.state, "", url);
               }}
             />
             <div className="flex flex-col gap-2">
@@ -423,6 +444,16 @@ export function ProductRunway() {
                   {isAirGuard ? airguardIntro : column.blurb}
                 </motion.p>
               </AnimatePresence>
+              {isAirGuard && (
+                <a
+                  href="#fit-finder"
+                  className="group inline-flex w-fit items-center gap-2 rounded-full border border-brand-500/25 bg-brand-500/[0.06] py-1.5 pl-1.5 pr-3.5 text-sm font-medium text-brand-600 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white dark:text-brand-300"
+                >
+                  <span className="grid size-6 place-items-center rounded-full bg-brand-500 text-[11px] text-white">?</span>
+                  Not sure which? Find your fit in 3 questions
+                  <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </a>
+              )}
             </div>
           </div>
 
@@ -440,7 +471,7 @@ export function ProductRunway() {
               if (ev.key === "ArrowRight") api.current?.next();
               if (ev.key === "ArrowLeft") api.current?.prev();
             }}
-            className="runway-stage relative h-[56svh] min-h-[320px] flex-1 overflow-hidden outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--brand-400)] lg:h-auto lg:min-h-0"
+            className="runway-stage group/stage relative h-[56svh] min-h-[320px] flex-1 overflow-hidden outline-none focus-visible:shadow-[inset_0_0_0_2px_var(--brand-400)] lg:h-auto lg:min-h-0"
           >
             {/* floor and atmosphere */}
             <div
@@ -517,11 +548,41 @@ export function ProductRunway() {
               {!isAirGuard && <BrandTeaser key={brand} brand={brand} />}
             </AnimatePresence>
 
+            {/* "View in 3D": always shown on touch screens; on desktop it appears while the stage is hovered */}
+            <AnimatePresence>
+              {isAirGuard && !viewing && (
+                <motion.div
+                  key="view-3d"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0, transition: { duration: 0.6, delay: reduce ? 0 : 0.9, ease: EASE } }}
+                  exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                  className="pointer-events-none absolute inset-x-0 bottom-[46px] z-[1600] flex justify-center md:bottom-[64px]"
+                >
+                  <button
+                    type="button"
+                    data-rw-view=""
+                    data-cta=""
+                    onClick={(ev) => {
+                      const r = stageRef.current?.getBoundingClientRect();
+                      const b = ev.currentTarget.getBoundingClientRect();
+                      openViewer(model.id, r ? { x: b.left + b.width / 2 - r.left, y: b.top + b.height / 2 - r.top } : undefined);
+                    }}
+                    className="runway-view-btn pointer-events-auto inline-flex h-11 items-center gap-2 rounded-full border border-white/70 bg-white/80 pl-2 pr-5 text-sm font-medium text-navy shadow-[0_14px_30px_-14px_rgba(23,34,54,0.55)] backdrop-blur-md transition-[opacity,transform,background-color,color] duration-500 hover:bg-brand-500 hover:text-white focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-brand-400 group-data-[dragging=1]/stage:opacity-0 dark:border-white/10 dark:bg-[#1f304f]/80 dark:text-white [@media(hover:hover)]:translate-y-1 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover/stage:translate-y-0 [@media(hover:hover)]:group-hover/stage:opacity-100"
+                  >
+                    <span className="runway-view-icon grid size-7 place-items-center rounded-full bg-brand-500 text-white">
+                      <Rotate3d className="size-4" aria-hidden="true" />
+                    </span>
+                    View {model.code} in 3D
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* the clicked model in 3D, revealed in a circle growing from the click */}
             <AnimatePresence>
               {viewing && (
                 <motion.div
-                  key={viewing.id}
+                  key="viewer"
                   className="absolute inset-0 z-[1650]"
                   initial={reduce ? { opacity: 0 } : { clipPath: `circle(0px at ${viewing.x}px ${viewing.y}px)` }}
                   animate={reduce ? { opacity: 1 } : { clipPath: `circle(${viewing.r}px at ${viewing.x}px ${viewing.y}px)` }}
@@ -532,7 +593,29 @@ export function ProductRunway() {
                   }
                   transition={{ duration: 1.1, ease: EASE }}
                 >
-                  <ModelViewer id={viewing.id} />
+                  <AnimatePresence initial={false}>
+                    <motion.div
+                      key={viewing.id}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0, scale: reduce ? 1 : 0.96 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.6, ease: EASE }}
+                    >
+                      <ModelViewer id={viewing.id} />
+                    </motion.div>
+                  </AnimatePresence>
+                  <button
+                    ref={backRef}
+                    type="button"
+                    onClick={closeViewer}
+                    aria-label="Close the 3D view"
+                    className="group absolute right-3 top-3 z-10 inline-flex h-11 items-center gap-2 rounded-full border border-navy/10 bg-card/85 pl-3 pr-3 text-sm font-medium text-navy shadow-[0_10px_24px_-16px_rgba(23,34,54,0.5)] backdrop-blur-md transition-colors hover:border-brand-500 hover:text-brand-500 focus-visible:outline-2 focus-visible:outline-brand-400 md:right-5 md:top-5 md:pl-4"
+                  >
+                    <span className="max-md:sr-only">Close</span>
+                    <kbd className="hidden rounded border border-border px-1.5 text-[10px] font-normal text-muted-foreground md:inline">Esc</kbd>
+                    <X className="size-4 transition-transform duration-300 group-hover:rotate-90" aria-hidden="true" />
+                  </button>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -558,7 +641,7 @@ export function ProductRunway() {
             inert={!isAirGuard || !!viewing}
           >
             <RoundIcon label="Previous model" onClick={() => api.current?.prev()}>
-              <svg width="26" height="14" viewBox="0 0 26 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-500 group-hover:-translate-x-1">
+              <svg width="26" height="14" viewBox="0 0 26 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-500 group-hover:-translate-x-1 rtl:-scale-x-100">
                 <path d="M25 7H1M7 1L1 7l6 6" />
               </svg>
             </RoundIcon>
@@ -586,7 +669,7 @@ export function ProductRunway() {
               {autoplay ? <Pause className="size-3.5 fill-current" strokeWidth={0} /> : <Play className="size-3.5 fill-current" strokeWidth={0} />}
             </RoundIcon>
             <RoundIcon label="Next model" onClick={() => api.current?.next()}>
-              <svg width="26" height="14" viewBox="0 0 26 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-500 group-hover:translate-x-1">
+              <svg width="26" height="14" viewBox="0 0 26 14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-500 group-hover:translate-x-1 rtl:-scale-x-100">
                 <path d="M1 7h24M19 1l6 6-6 6" />
               </svg>
             </RoundIcon>
@@ -600,19 +683,44 @@ export function ProductRunway() {
                 exit={{ opacity: 0, y: 6, transition: { duration: 0.2 } }}
                 className="absolute inset-0 flex items-center justify-between gap-3 px-3 pb-4 md:px-10 lg:px-11 lg:pb-7"
               >
-                <button
-                  ref={backRef}
-                  type="button"
-                  onClick={closeViewer}
-                  className="group inline-flex h-11 items-center gap-2 rounded-full border border-navy/15 bg-card px-5 text-sm font-medium text-navy shadow-[0_10px_24px_-16px_rgba(23,34,54,0.5)] hover:border-brand-500 hover:text-brand-500 focus-visible:outline-2 focus-visible:outline-brand-400"
-                >
-                  <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
-                  Explore products
-                </button>
-                <p className="hidden items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-muted-foreground sm:flex">
-                  <Hand className="size-3.5" aria-hidden="true" />
-                  {MODELS.find((m) => m.id === viewing.id)?.name} · Drag to turn
-                </p>
+                {/* switch the 3D model in place */}
+                <div role="group" aria-label="Model in 3D" className="flex min-w-0 gap-1 rounded-full border border-border bg-card p-1 shadow-[0_10px_24px_-16px_rgba(23,34,54,0.5)]">
+                  {MODELS.map((m, i) => {
+                    const on = m.id === viewing.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        aria-pressed={on}
+                        aria-label={`${m.name} in 3D`}
+                        onClick={() => !on && switchViewer(i)}
+                        className={cn("relative h-9 rounded-full px-3.5 text-sm font-medium transition-colors md:px-4", on ? "text-white" : "text-navy/70 hover:text-navy")}
+                      >
+                        {on && (
+                          <motion.span
+                            layoutId="viewer-model"
+                            className="absolute inset-0 rounded-full bg-brand-500"
+                            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+                          />
+                        )}
+                        <span className="relative">{m.code}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <p className="hidden items-center gap-2 text-[11px] uppercase tracking-[0.08em] text-muted-foreground xl:flex">
+                    <Hand className="size-3.5" aria-hidden="true" /> Drag to turn
+                  </p>
+                  <Link
+                    href={`/products/${viewing.id}`}
+                    data-cta=""
+                    className="group inline-flex h-11 items-center gap-1.5 rounded-full bg-navy px-4 text-sm font-medium text-white hover:bg-brand-500 focus-visible:outline-2 focus-visible:outline-brand-400 md:px-5 dark:bg-white dark:text-navy"
+                  >
+                    <span className="max-sm:hidden">Full</span> details
+                    <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
+                  </Link>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -672,6 +780,21 @@ export function ProductRunway() {
   );
 }
 
+const BRANDS: BrandId[] = ["airguard", "king-hydrogen", "arcane-herb", "book-store"];
+
+/** Applies ?brand= from the address, on arrival and whenever it changes (e.g. from the header menu). */
+function BrandFromUrl({ onBrand }: { onBrand: (b: BrandId) => void }) {
+  const param = useSearchParams().get("brand");
+  const apply = useRef(onBrand);
+  useEffect(() => {
+    apply.current = onBrand;
+  });
+  useEffect(() => {
+    if (param && (BRANDS as string[]).includes(param)) apply.current(param as BrandId);
+  }, [param]);
+  return null;
+}
+
 function BrandPills({ brand, onChange }: { brand: BrandId; onChange: (b: BrandId) => void }) {
   const reduce = useMotionPreference();
   return (
@@ -710,9 +833,6 @@ function BrandPills({ brand, onChange }: { brand: BrandId; onChange: (b: BrandId
                   style={active ? undefined : { backgroundColor: c.accent }}
                 />
                 {c.brand}
-                {c.id !== "airguard" && (
-                  <span className={cn("text-[9px] uppercase tracking-[0.08em]", active ? "text-white/70" : "text-muted-foreground")}>Soon</span>
-                )}
               </span>
             </motion.button>
           );
@@ -788,15 +908,42 @@ function BrandPanel({ brand }: { brand: BrandId }) {
       <h2 className="mt-2 text-2xl font-medium tracking-tight text-navy md:text-3xl">{column.brand}</h2>
       <ul className="mt-5 border-b border-border">
         {column.items.map((item) => (
-          <li key={item.name} className="border-t border-border py-3">
-            <span className="block text-sm font-medium text-navy">{item.name}</span>
-            <span className="block text-xs text-muted-foreground">{item.note}</span>
+          <li key={item.name} className="border-t border-border">
+            <Link href={item.href} className="group flex items-center gap-3 py-3">
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-medium text-navy transition-colors group-hover:text-brand-500">{item.name}</span>
+                <span className="block text-xs text-muted-foreground">{item.note}</span>
+              </span>
+              <ArrowRight className="size-4 shrink-0 text-navy/30 transition-all group-hover:translate-x-0.5 group-hover:text-brand-500" aria-hidden="true" />
+            </Link>
           </li>
         ))}
       </ul>
-      <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-        Coming soon to this page.
-      </p>
+      <div className="mt-5 flex flex-wrap gap-3">
+        {brand === "book-store" ? (
+          <a
+            href={BOOK_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-cta="primary"
+            className="inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-medium text-white"
+            style={{ backgroundColor: column.accent }}
+          >
+            Visit the Book Store
+            <ArrowUpRight className="size-4" aria-hidden="true" />
+          </a>
+        ) : (
+          <Link
+            href={`/contact?product=${brand}`}
+            data-cta="primary"
+            className="inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-medium text-white"
+            style={{ backgroundColor: column.accent }}
+          >
+            Enquire about {column.brand}
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -830,7 +977,7 @@ function BrandTeaser({ brand }: { brand: Exclude<BrandId, "airguard"> }) {
       </div>
       <div className="max-w-md">
         <p className="text-[11px] font-medium uppercase tracking-[0.08em]" style={{ color: column.accent }}>
-          Coming to this page
+          {column.blurb}
         </p>
         <p className="mt-2 text-2xl font-medium text-navy md:text-3xl">{column.brand}</p>
       </div>
@@ -838,7 +985,7 @@ function BrandTeaser({ brand }: { brand: Exclude<BrandId, "airguard"> }) {
         href={brandHome[brand]}
         className="group inline-flex items-center gap-2 rounded-full border border-navy/15 bg-white/80 px-5 py-2.5 text-sm font-medium text-navy backdrop-blur hover:border-navy/30 dark:bg-white/5"
       >
-        Explore {column.brand} on our home page
+        Explore {column.brand}
         <ArrowUpRight className="size-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" aria-hidden="true" />
       </Link>
     </motion.div>

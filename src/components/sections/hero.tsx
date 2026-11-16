@@ -17,8 +17,8 @@ import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { heroSlides } from "@/data/hero-slides";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** Words rise out of a blur, one after the next. */
 function TitleWords({
@@ -223,7 +223,7 @@ export function Hero() {
 
   return (
     // The tall track gives the pinned hero room to play its scroll story.
-    <div ref={trackRef} className="relative h-[224svh]">
+    <div ref={trackRef} className="relative h-[180svh] lg:h-[224svh]">
     {/* Sticky lives on this wrapper: a global rule forces section[data-theme] to position: relative. */}
     <motion.div ref={stageRef} className="sticky top-0 h-[100svh]">
     <Section

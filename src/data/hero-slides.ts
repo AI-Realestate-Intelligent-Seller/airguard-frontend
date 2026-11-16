@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { BadgeCheck, Droplets, Package } from "lucide-react";
 import type { StaticImageData } from "next/image";
-import productXp from "../../public/images/site/airguard/product-xp.webp";
+import productXp from "../../public/images/site/airguard/product-xp-screen.webp";
 import productMp from "../../public/images/site/airguard/product-mp.webp";
 import productLt from "../../public/images/site/airguard/product-lt.webp";
 import productCh from "../../public/images/site/airguard/product-ch.webp";
@@ -42,7 +42,7 @@ export const heroSlides: HeroSlide[] = [
     titleAccent: "watered down",
     tagline: "Programmable hydrogen water.",
     body:
-      "A distillery for the counter — Bluetooth-controlled, engraved glass, and four editions from the essential SimpleStill to the full-spectrum Monarch.",
+      "A distillery for the counter — Bluetooth-controlled, engraved glass, and five editions from the essential SimpleStill to the full-spectrum Monarch.",
     cta: { label: "Shop now", href: "#aurora-3d" },
     wash: "linear-gradient(100deg, #060b17 6%, #0d1b3a 48%, #10306b 100%)",
     accent: "#5ec8ff",

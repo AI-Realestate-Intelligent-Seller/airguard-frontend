@@ -18,6 +18,7 @@ import wellnessImg from "../../../public/images/site/journey/wellness.webp";
 import clinicImg from "../../../public/images/site/journey/institutional.webp";
 import productImg from "../../../public/images/site/journey/distributors.webp";
 import researchImg from "../../../public/images/site/journey/partners.webp";
+import { EASE } from "@/lib/motion";
 
 /*
  * "The Journey": scrolls up from below the hero while the hero's ring swirls down its drain; the
@@ -137,7 +138,6 @@ const proof = [
   { icon: ShieldCheck, label: "FDA registered" },
 ];
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 /*
  * Scroll (desktop), in screens (svh):
  *   -100 –   0  the Journey scrolls up from below as the hero lets go; the hero's ring swirls

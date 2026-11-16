@@ -92,7 +92,7 @@ export function GetInTouch() {
     <Section id="contact" theme="dark" className="relative isolate overflow-hidden py-20 md:py-28">
       <div aria-hidden className="absolute inset-0 -z-10 overflow-hidden">
         <Image src={teamPhoto} alt="" fill sizes="100vw" className="animate-slow-zoom object-cover object-top" />
-        <div className="absolute inset-0 bg-navy/25" />
+        <div className="absolute inset-0 bg-[#172236]/25" />
       </div>
       <Container>
         <Reveal blur>

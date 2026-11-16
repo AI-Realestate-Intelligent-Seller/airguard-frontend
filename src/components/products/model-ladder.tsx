@@ -8,6 +8,7 @@ import { capabilities, ladderOrder, modelById, type ModelId } from "@/data/airgu
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { Reveal } from "@/components/motion/reveal";
 import { cn } from "@/lib/utils";
+import { EASE } from "@/lib/motion";
 
 /*
  * "Climb the range": a pinned scroll scene (desktop). Four screens of scrolling climb the
@@ -18,7 +19,6 @@ import { cn } from "@/lib/utils";
  * each line on or off for the model in view, with a running count.
  * Phones, tablets and reduced motion get the same content as a plain stacked list.
  */
-const EASE = [0.16, 1, 0.3, 1] as const;
 const STEPS = ladderOrder.length;
 
 export function ModelLadder() {

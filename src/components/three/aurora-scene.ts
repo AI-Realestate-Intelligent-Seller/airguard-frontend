@@ -19,6 +19,7 @@ export function mountAurora(
     reducedMotion = false,
     onPick,
     edition = "aurora",
+    onDoorState,
   }: {
     /** The page's label element for each part; the scene keeps it pinned to its part. */
     getLabel?: (id: string) => HTMLElement | null;
@@ -26,7 +27,9 @@ export function mountAurora(
     /** A part was tapped or clicked (or tapped again to clear): its id, or null. */
     onPick?: (id: string | null) => void;
     /** Which King Hydrogen edition to show: the same cabinet, finished and lit as its product photo. */
-    edition?: "aurora" | "founder" | "monarch" | "simplestill";
+    edition?: "aurora" | "founder" | "monarch" | "simplestill" | "kingguard";
+    /** King Guard only: the cabinet door opened (true) or closed (false). */
+    onDoorState?: (open: boolean) => void;
   } = {}
 ) {
 const reduced = reducedMotion;
@@ -41,7 +44,7 @@ camera.position.set(4.8, 3.45, 7.85); // close in: the Aurora fills the stage
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setClearColor(0x000000, 0); // the section's own dark studio shows through
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2)); // phones: 1.5× is plenty with antialiasing
 renderer.setSize(stage.clientWidth, stage.clientHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1197,6 +1200,26 @@ if (edition === "simplestill") {
   champagneChromeSpigotMat.color.set(0xf4f4f2); champagneChromeSpigotMat.metalness = 0; champagneChromeSpigotMat.roughness = 0.55;
 }
 
+// King Guard (no product photo yet: an illustrative take on its "interactive door-state" idea):
+// the Aurora cabinet in gunmetal, with a status strip beside the door, green while it is closed
+// and amber while it is open. The door swings open and shut on its own; tapping it takes over.
+let doorTarget = 0, doorAngle = 0, doorAuto = edition === "kingguard" && !reduced, doorLed = null, doorTimer = 0;
+const DOOR_CLOSED = new THREE.Color(0x37d67a), DOOR_OPEN = new THREE.Color(0xffb347);
+function setDoor(open){
+  doorTarget = open ? 1 : 0;
+  onDoorState?.(open);
+}
+if (edition === "kingguard") {
+  exteriorSteelMat.color.set(0x2c3038); exteriorSteelMat.metalness = 0.75; exteriorSteelMat.roughness = 0.3;
+  doorLed = new THREE.Mesh(new THREE.BoxGeometry(0.022, lowerH * 0.72, 0.014),
+    new THREE.MeshBasicMaterial({ color: DOOR_CLOSED.clone(), toneMapped: false }));
+  doorLed.position.set(-W / 2 + 0.015 + leftCabW + 0.012, lowerY, D / 2 + 0.008);
+  lowerBodyGroup.add(doorLed);
+  const glow = new THREE.PointLight(0x37d67a, 0.9 * Math.PI, 0.9, 2);
+  glow.position.set(0, 0, 0.12); doorLed.add(glow);
+  doorLed.userData.glow = glow;
+}
+
 // ── Parts: every labelled part, by the prototype's own groups. ──
 const partGroups = {
   jar: dispenserGroup,
@@ -1275,6 +1298,8 @@ const onUp = e => {
   pinnedId = id && id !== pinnedId ? id : null;
   hoveredId = undefined; setHovered(e.pointerType === "mouse" ? id : null);
   onPick?.(pinnedId);
+  // King Guard: tapping the door opens or closes it (and stops the automatic cycle)
+  if (edition === "kingguard" && id === "door") { doorAuto = false; setDoor(!doorTarget); }
 };
 renderer.domElement.addEventListener("pointerdown", onDown);
 renderer.domElement.addEventListener("pointerup", onUp);
@@ -1385,6 +1410,13 @@ function animate(){
       if (b.mesh.position.y > 1.24) b.mesh.position.y = 0.12;
     }
   }
+  if (edition === "kingguard") {
+    if (doorAuto && (doorTimer += 0.016) > 3.4) { doorTimer = 0; setDoor(!doorTarget); }
+    doorAngle += (doorTarget - doorAngle) * (reduced ? 1 : 0.06);
+    doorPivotGroup.rotation.y = -doorAngle * 1.65; // swings out on its left hinge
+    doorLed.material.color.copy(DOOR_CLOSED).lerp(DOOR_OPEN, doorAngle);
+    doorLed.userData.glow.color.copy(doorLed.material.color);
+  }
   // While turning by itself, keep the hover on whatever is now under the pointer.
   if (controls.autoRotate && lastPointer && !dragging) report(lastPointer.x, lastPointer.y);
   zoom.update();
@@ -1417,7 +1449,7 @@ const dispose = () => {
 };
 /** The page's part list: light a part (or clear with null). */
 const highlight = id => { pinnedId = id; hoveredId = undefined; setHovered(null); };
-return Object.assign(dispose, { zoomIn: zoom.zoomIn, zoomOut: zoom.zoomOut, highlight });
+return Object.assign(dispose, { zoomIn: zoom.zoomIn, zoomOut: zoom.zoomOut, highlight, toggleDoor: () => { doorAuto = false; setDoor(!doorTarget); } });
 } finally {
   THREE.ColorManagement.enabled = colorManagement;
 }

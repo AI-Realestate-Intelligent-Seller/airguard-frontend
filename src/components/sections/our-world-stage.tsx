@@ -39,7 +39,7 @@ export function OurWorldStage() {
 
   return (
     // Desktop: overlaps the end of the Journey's pinned track (see its cover phase) and opens over it.
-    <div id={OUR_WORLD_TRACK_ID} ref={trackRef} className="relative z-30 h-[650svh] lg:-mt-[200svh]">
+    <div id={OUR_WORLD_TRACK_ID} ref={trackRef} className="relative z-30 h-[450svh] lg:-mt-[200svh] lg:h-[650svh]">
       <div className="sticky top-0 h-[100svh] overflow-hidden">
         <OurWorld opening="center" reveal={opens ? reveal : undefined} show={show} tour={tour} />
       </div>

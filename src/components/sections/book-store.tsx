@@ -7,6 +7,7 @@ import { ArrowUpRight, Headphones } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
 import { BOOK_STORE_URL, storeBooks } from "@/data/book-store";
+import { EASE } from "@/lib/motion";
 
 /*
  * The Book Store, after Arcane Herbs (the wellness pair), before Get in touch. Two parts:
@@ -18,7 +19,6 @@ import { BOOK_STORE_URL, storeBooks } from "@/data/book-store";
  *     portrait cut of each.
  *  2. The shelf: every title in the store with its price, each linking to its store page.
  */
-const EASE = [0.16, 1, 0.3, 1] as const;
 /** Share of the pinned scroll that plays the film; the rest holds its last frame. */
 const PLAY = 0.82;
 const FRAMES = 240;

@@ -8,6 +8,7 @@ import { ArrowRight, Droplets, Leaf, Sprout } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
 import { arcaneHerbTeas, featuredArcaneHerbTeas } from "@/data/arcane-herb-products";
+import { EASE } from "@/lib/motion";
 
 /*
  * Arcane Herbs, after King Hydrogen (its blends can be prepared with King Hydrogen water),
@@ -20,7 +21,6 @@ import { arcaneHerbTeas, featuredArcaneHerbTeas } from "@/data/arcane-herb-produ
  *  - Wide screens: the whole film plays in a tall column on the right, beside the words (short
  *    screens leave out the blend pictures, then the three points, so the words always fit).
  */
-const EASE = [0.16, 1, 0.3, 1] as const;
 const FRAMES = 240;
 const FILM_W = 720;
 const FILM_H = 1280;

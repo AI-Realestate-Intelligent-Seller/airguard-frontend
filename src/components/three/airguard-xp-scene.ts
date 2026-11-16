@@ -13,6 +13,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { makeZoom } from "./zoom";
+import { drawOcclusalArch } from "@/lib/draw-occlusal-arch";
 
 export type AirGuardPart = { id: string; name: string; title: string; copy: string };
 export type HoverInfo = { part: AirGuardPart; x: number; y: number } | null;
@@ -67,7 +68,7 @@ camera.position.set(6.6, 5.2, 8.9); // close in: the guard fills the stage
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 renderer.setClearColor(0x000000, 0); // the section's own background shows through
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2)); // phones: 1.5× is plenty with antialiasing
 renderer.setSize(stage.clientWidth, stage.clientHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -413,7 +414,20 @@ const capturedFrame=null;
 const touchZones=[];
 function roundRectPath(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
 // Occlusal-view dentition: two arches of individually shaded teeth.
+// The screen's intra-oral view: an upper arch drawn in code (src/lib/draw-occlusal-arch.ts),
+// rendered once at 2× so it stays sharp when zoomed.
+let archCanvas: HTMLCanvasElement | null = null;
+function archView(){
+  if(!archCanvas){archCanvas=document.createElement('canvas');archCanvas.width=2048;archCanvas.height=1280;drawOcclusalArch(archCanvas.getContext("2d")!,2048,1280)}
+  return archCanvas;
+}
 function drawDentition(c,state){
+  {
+    c.save();c.beginPath();c.rect(24,96,976,450);c.clip();
+    c.translate(512+state.panX,322+state.panY);c.scale(state.zoom,state.zoom);
+    c.drawImage(archView(),-488,-305,976,610);
+    c.restore();return;
+  }
   const g=c.createRadialGradient(512,320,50,512,320,470);
   g.addColorStop(0,'#1d3f42');g.addColorStop(.55,'#0e272c');g.addColorStop(1,'#07151b');
   c.fillStyle=g;c.fillRect(24,96,976,450);
@@ -462,7 +476,7 @@ function drawDisplay(){
   drawDentition(c,state);
   c.textAlign='left';c.fillStyle='#91d9ca';c.font='bold 27px Arial';c.fillText(liveState.review?'CAPTURE REVIEW · DEMO':'INTRA-ORAL VIEW · DEMO',32,48);
   c.textAlign='right';c.fillStyle='#fff';c.fillText(state.zoom.toFixed(1)+'×',880,48);
-  c.textAlign='center';c.fillStyle='#d5e5e8';c.font='25px Arial';c.fillText('Demo dentition render • No clinical camera connected',460,585);
+  c.textAlign='center';c.fillStyle='#d5e5e8';c.font='25px Arial';c.fillText('Illustrative view • No clinical camera connected',460,585);
   c.fillStyle='#6f939e';c.font='20px Arial';c.fillText('Drag to pan · pinch, scroll or tap + / − to zoom · ◉ captures',460,621);
   drawTouchControls(c);
   screenTexture.needsUpdate=true;
@@ -742,7 +756,7 @@ animate();
 
 const dispose = () => {
   zoom.dispose();
-  cancelAnimationFrame(raf);
+  cancelAnimationFrame(raf);archCanvas=null;
   window.clearTimeout(resumeTimer);
   sizeObserver.disconnect();
   io.disconnect();

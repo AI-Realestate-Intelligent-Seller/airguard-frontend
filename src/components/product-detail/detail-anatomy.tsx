@@ -7,8 +7,8 @@ import { modelById, type ModelId } from "@/data/airguard-models";
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { cn } from "@/lib/utils";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 /** Share of the pinned scroll spent pulling the model apart before the first part is shown. */
 const INTRO = 0.14;
 /** How far apart the model is pulled (1 = each part's full offset). */

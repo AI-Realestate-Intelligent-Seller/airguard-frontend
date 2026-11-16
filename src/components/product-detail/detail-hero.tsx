@@ -9,8 +9,8 @@ import { ModelStage } from "@/components/product-detail/model-stage";
 import { modelById, type ModelId } from "@/data/airguard-models";
 import { formatUsd } from "@/lib/cart";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /**
  * Product hero, after the MotionSites "Quantum Human" layout: a light studio (dark navy in dark

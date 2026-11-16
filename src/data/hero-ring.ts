@@ -4,7 +4,7 @@ import featureAerosol from "../../public/images/site/airguard/feature-aerosol.we
 import featureFit from "../../public/images/site/airguard/feature-fit.webp";
 import featureInnovation from "../../public/images/site/airguard/feature-innovation.webp";
 import teamPhoto from "../../public/images/site/contact/team-photo.webp";
-import productXp from "../../public/images/site/airguard/product-xp.webp";
+import productXp from "../../public/images/site/airguard/product-xp-screen.webp";
 import productMp from "../../public/images/site/airguard/product-mp.webp";
 import productLt from "../../public/images/site/airguard/product-lt.webp";
 import productCh from "../../public/images/site/airguard/product-ch.webp";

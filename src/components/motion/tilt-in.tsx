@@ -4,6 +4,7 @@ import { motion, type Variants } from "motion/react";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { EASE } from "@/lib/motion";
 
 type TiltInProps = {
   children: ReactNode;
@@ -36,7 +37,7 @@ export function TiltIn({ children, className, delay = 0, angle = 15 }: TiltInPro
           y: 0,
           rotateX: 0,
           scale: 1,
-          transition: { duration: 0.75, delay, ease: [0.16, 1, 0.3, 1] },
+          transition: { duration: 0.75, delay, ease: EASE },
         },
       };
 

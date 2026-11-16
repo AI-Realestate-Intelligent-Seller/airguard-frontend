@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Hand, MessageSquareText, Minus, MousePointer2, Plus } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
+import { EASE } from "@/lib/motion";
 
 /*
  * King Hydrogen Aurora up close, the first wellness section after AirGuard XP, built like it: the
@@ -15,11 +16,10 @@ import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-pref
  * Light in light mode (like the AirGuard XP section); dark mode sets it in a misty studio like the
  * Aurora's product film. A plain section: its content fades up.
  *
- * Four editions share the Aurora's cabinet, so one scene shows them all (aurora-scene.ts
- * `edition`), each finished and lit as its product photo. King Guard has no product photo yet,
- * so it isn't modelled.
+ * Five editions share the Aurora's cabinet, so one scene shows them all (aurora-scene.ts
+ * `edition`), each finished and lit as its product photo. King Guard has no product photo or
+ * price yet, so its model is illustrative: its door-state idea, a status light and an opening door.
  */
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** Part names and one-liners, in the scene's label order (aurora-scene.ts). */
 const PARTS = [
@@ -33,7 +33,7 @@ const PARTS = [
   { id: "handle", name: "Side handle", line: "Recessed flush pull." },
 ];
 
-type EditionId = "aurora" | "founder" | "monarch" | "simplestill";
+type EditionId = "aurora" | "founder" | "monarch" | "simplestill" | "kingguard";
 
 /** The editions: names and notes as in the products menu; the rest describes each product photo. */
 const EDITIONS: {
@@ -106,6 +106,21 @@ const EDITIONS: {
       { k: "Simple switch", v: "One switch on the front" },
     ],
   },
+  {
+    // No product photo or price yet: an illustrative model of its door-state experience.
+    id: "kingguard",
+    name: "King Guard",
+    short: "King Guard",
+    note: "Interactive door-state experience",
+    copy: "A gunmetal cabinet whose door reports its own state: a status light beside it glows green when closed and amber when open. Tap the door, or the button, to open or close it.",
+    hidden: [],
+    rename: { door: { name: "Guarded door", line: "Status light: green closed, amber open." } },
+    highlights: [
+      { k: "Door-state light", v: "Green closed · amber open" },
+      { k: "Interactive door", v: "Tap to open or close" },
+      { k: "Rotary controls", v: "M, Timer, S and Bluetooth®" },
+    ],
+  },
 ];
 
 export function Aurora3D() {
@@ -122,7 +137,9 @@ export function Aurora3D() {
   };
   const stageRef = useRef<HTMLDivElement>(null);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const viewRef = useRef<{ zoomIn: () => void; zoomOut: () => void; highlight: (id: string | null) => void } | null>(null);
+  const viewRef = useRef<{ zoomIn: () => void; zoomOut: () => void; highlight: (id: string | null) => void; toggleDoor?: () => void } | null>(null);
+  /** King Guard: whether its cabinet door is open. */
+  const [doorOpen, setDoorOpen] = useState(false);
   const [picked, setPicked] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -131,7 +148,7 @@ export function Aurora3D() {
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    let cleanup: ((() => void) & { zoomIn: () => void; zoomOut: () => void; highlight: (id: string | null) => void }) | undefined;
+    let cleanup: ((() => void) & { zoomIn: () => void; zoomOut: () => void; highlight: (id: string | null) => void; toggleDoor?: () => void }) | undefined;
     let cancelled = false;
     const io = new IntersectionObserver(
       async ([e]) => {
@@ -145,6 +162,7 @@ export function Aurora3D() {
             reducedMotion: reduceMotion,
             onPick: setPicked,
             edition: editionId,
+            onDoorState: setDoorOpen,
           });
           viewRef.current = cleanup;
           setReady(true);
@@ -202,7 +220,7 @@ export function Aurora3D() {
           </p>
 
           {/* Editions: one cabinet, four finishes */}
-          <div role="tablist" aria-label="King Hydrogen editions" className="-mx-1 mt-6 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+          <div role="tablist" aria-label="King Hydrogen editions" className="mt-6 flex flex-wrap gap-1.5">
             {EDITIONS.map((e) => (
               <button
                 key={e.id}
@@ -285,6 +303,21 @@ export function Aurora3D() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* King Guard: the door's state, and a way to open or close it */}
+          {ready && editionId === "kingguard" && (
+            <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/80 bg-white/80 py-1 pe-1 ps-3 text-sm text-navy shadow-[0_10px_24px_-14px_rgba(23,34,54,0.5)] backdrop-blur-md dark:border-white/15 dark:bg-[#121826]/85 dark:text-white">
+              <span aria-hidden="true" className="size-2.5 rounded-full transition-colors duration-500" style={{ backgroundColor: doorOpen ? "#ffb347" : "#37d67a", boxShadow: `0 0 10px ${doorOpen ? "#ffb347" : "#37d67a"}` }} />
+              <span aria-live="polite">{doorOpen ? "Door open" : "Door closed"}</span>
+              <button
+                type="button"
+                onClick={() => viewRef.current?.toggleDoor?.()}
+                className="rounded-full bg-navy px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-brand-500 dark:bg-white dark:text-navy"
+              >
+                {doorOpen ? "Close door" : "Open door"}
+              </button>
+            </div>
+          )}
 
           {/* Zoom in / out */}
           {ready && (

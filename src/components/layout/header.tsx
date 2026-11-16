@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
-import { ChevronDown, Menu, ShoppingCart, X } from "lucide-react";
+import { ChevronDown, Heart, Menu, ShoppingCart, X } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -16,8 +16,15 @@ import { productsMenu } from "@/data/products-menu";
 import { cart, cartCount, useCart } from "@/lib/cart";
 import logo from "../../../public/images/brand/airguard-logo-blue.png";
 import logoLight from "../../../public/images/brand/airguard-logo-white.png";
+import { EASE } from "@/lib/motion";
+import { useT } from "@/i18n/locale";
+import { LanguageSwitch, LanguageSegments } from "@/components/i18n/language-switch";
+
+/** The Orrington Institute "Safe Water, Bright Futures" campaign linked from airguardhealth.com. */
+const DONATE_URL = "https://www.gofundme.com/f/help-orrington-institute-safe-water-bright-futures";
 
 export function Header() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { scrollY } = useScroll();
@@ -100,16 +107,17 @@ export function Header() {
                 href={item.href}
                 className="text-sm text-navy/80 transition-colors hover:text-brand-500"
               >
-                {item.label}
+                {t(item.label)}
               </Link>
             ))}
         </nav>
 
         <div className="flex items-center gap-3">
+          <LanguageSwitch />
           <ThemeToggle />
           <button
             type="button"
-            aria-label={count ? `Cart, ${count} item${count === 1 ? "" : "s"}` : "Cart"}
+            aria-label={count ? `${t("Cart")}, ${count}` : t("Cart")}
             onClick={cart.open}
             data-cart-target
             className="relative inline-flex rounded-md p-2 text-navy/80 transition-colors hover:bg-brand-50 hover:text-brand-500"
@@ -131,18 +139,29 @@ export function Header() {
               )}
             </AnimatePresence>
           </button>
+          {/* Donate goes to the Orrington Institute campaign (as on airguardhealth.com); the main button is the sales one */}
+          <a
+            href={DONATE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm text-navy/75 transition-colors hover:bg-brand-50 hover:text-brand-500 lg:inline-flex"
+          >
+            <Heart className="size-4" aria-hidden="true" />
+            {t("Donate")}
+          </a>
           <Link
             href="/contact"
+            data-cta=""
             className={cn(
               buttonVariants(),
               "hidden sm:inline-flex hover:bg-brand-600"
             )}
           >
-            Donate Now
+            {t("Get a quote")}
           </Link>
           <button
             type="button"
-            aria-label={open ? "Close menu" : "Open menu"}
+            aria-label={open ? t("Close menu") : t("Open menu")}
             aria-expanded={open}
             aria-controls="mobile-menu"
             onClick={() => setOpen((v) => !v)}
@@ -161,7 +180,7 @@ export function Header() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: shouldReduceMotion ? 0 : 0.22, ease: EASE }}
             // Fills the screen under the header and scrolls on its own, so long
             // product lists stay reachable instead of being clipped by the
             // fixed-height sticky header.
@@ -189,7 +208,7 @@ function Collapse({ open, id, children }: { open: boolean; id: string; children:
           initial={{ height: 0, opacity: 0 }}
           animate={{ height: "auto", opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: shouldReduceMotion ? 0 : 0.24, ease: EASE }}
           className="overflow-hidden"
         >
           {children}
@@ -204,6 +223,7 @@ function Collapse({ open, id, children }: { open: boolean; id: string; children:
  * Only one brand is expanded at once so the list stays short.
  */
 function MobileMenuContent({ onNavigate }: { onNavigate: () => void }) {
+  const t = useT();
   const [productsOpen, setProductsOpen] = useState(false);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
 
@@ -223,12 +243,22 @@ function MobileMenuContent({ onNavigate }: { onNavigate: () => void }) {
         }}
         className={cn(rowClass, productsOpen && "bg-white/[0.06] text-white")}
       >
-        <span className="font-medium">Products</span>
+        <span className="font-medium">{t("Products")}</span>
         <ChevronDown className={cn("size-5 text-white/60 transition-transform duration-200", productsOpen && "rotate-180")} />
       </button>
 
       <Collapse open={productsOpen} id="mobile-products">
         <ul className="ml-3 mt-1 mb-2 flex flex-col gap-0.5 border-l border-white/15 pl-2">
+          <li>
+            <Link
+              href="/products"
+              onClick={onNavigate}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+            >
+              <span className="flex-1">{t("All products")}</span>
+              <span aria-hidden className="text-white/50">→</span>
+            </Link>
+          </li>
           {productsMenu.map((col) => {
             const expanded = brandOpen === col.id;
             const panelId = `mobile-brand-${col.id}`;
@@ -272,7 +302,7 @@ function MobileMenuContent({ onNavigate }: { onNavigate: () => void }) {
                         className="mt-0.5 block rounded-md px-3 py-2 text-xs font-medium hover:bg-white/10"
                         style={{ color: col.accent }}
                       >
-                        {col.overview.label} →
+                        {t(col.overview.label, { n: col.overview.count ?? "" })} →
                       </Link>
                     </li>
                   </ul>
@@ -287,17 +317,30 @@ function MobileMenuContent({ onNavigate }: { onNavigate: () => void }) {
         .filter((item) => item.label !== "Products")
         .map((item) => (
           <Link key={item.href} href={item.href} onClick={onNavigate} className={cn(rowClass, "font-medium")}>
-            {item.label}
+            {t(item.label)}
           </Link>
         ))}
 
+      <div className="mt-4">
+        <LanguageSegments />
+      </div>
       <Link
         href="/contact"
         onClick={onNavigate}
-        className={cn(buttonVariants({ size: "lg" }), "mt-4 bg-white text-brand-500 hover:bg-white/90")}
+        className={cn(buttonVariants({ size: "lg" }), "mt-4 bg-[#fff] text-brand-500 hover:bg-[#fff]/90")}
       >
-        Donate Now
+        {t("Get a quote")}
       </Link>
+      <a
+        href={DONATE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onNavigate}
+        className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white"
+      >
+        <Heart className="size-4" aria-hidden="true" />
+        {t("Donate Now")}
+      </a>
     </Container>
   );
 }

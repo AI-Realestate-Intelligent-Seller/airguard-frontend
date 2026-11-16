@@ -3,6 +3,7 @@
 import { motion, type Variants } from "motion/react";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
 import type { ReactNode } from "react";
+import { EASE } from "@/lib/motion";
 
 type RevealProps = {
   children: ReactNode;
@@ -45,7 +46,7 @@ export function Reveal({
       x: 0,
       y: 0,
       ...(blur && !shouldReduceMotion ? { filter: "blur(0px)" } : null),
-      transition: { duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 0.6, delay, ease: EASE },
     },
   };
 

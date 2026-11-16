@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { useXpLight } from "@/lib/xp-light";
+import { useT } from "@/i18n/locale";
 
 /*
  * A pinned handoff between two home page sections, carrying a short statement of how they relate.
@@ -23,7 +24,7 @@ import { useXpLight } from "@/lib/xp-light";
  * XP's light hands off to the Aurora's water.
  */
 const WATER = "#2557f2";
-const HOLD_SVH = 150; // keep in step with the spacer (h-[150svh]); `next` overlaps the last 100
+const HOLD_SVH = 150; // desktop; phones hold 120 (keep in step with the spacer); `next` overlaps the last 100
 
 export function Handoff({
   children,
@@ -51,6 +52,7 @@ export function Handoff({
 }) {
   const ledColor = useXpLight();
   const reduce = useMotionPreference();
+  const t = useT();
   const heldRef = useRef<HTMLDivElement>(null);
   const holdRef = useRef<HTMLDivElement>(null);
   // Sticky offset that pins the held section by its bottom edge: min(0, screen − its height).
@@ -127,11 +129,11 @@ export function Handoff({
               className="absolute inset-x-0 top-[17%] mx-auto flex max-w-3xl flex-col items-center px-6 text-center md:top-[20%]"
             >
               <motion.p style={{ opacity: fromIn }} className="text-xs font-medium uppercase tracking-[0.08em] text-white/60">
-                {eyebrow}
+                {t(eyebrow)}
               </motion.p>
               <div className="mt-4 flex max-w-full items-center justify-center gap-2 sm:gap-3 md:gap-5">
                 <motion.span style={{ opacity: fromIn, y: fromY }} className="text-[clamp(1.5rem,7vw,2.25rem)] font-medium tracking-tight text-white md:text-6xl">
-                  {from}
+                  {t(from)}
                 </motion.span>
                 <motion.span
                   aria-hidden="true"
@@ -139,17 +141,17 @@ export function Handoff({
                   className="h-px w-5 shrink-0 origin-left sm:w-10 md:w-20"
                 />
                 <motion.span style={{ opacity: toIn, y: toY, color: accent }} className="text-[clamp(1.5rem,7vw,2.25rem)] font-medium tracking-tight md:text-6xl">
-                  {to}
+                  {t(to)}
                 </motion.span>
               </div>
               <motion.p style={{ opacity: lineIn, y: lineY }} className="mt-4 max-w-xl text-balance text-sm leading-relaxed text-white/80 sm:text-base md:mt-5 md:text-lg">
-                {line}
+                {t(line)}
               </motion.p>
             </motion.div>
           </div>
         </div>
         {/* the hold: 0.5 screen for the words, then one screen while `next` rises over the held section */}
-        <div ref={holdRef} aria-hidden="true" className="h-[150svh]" data-hold-svh={HOLD_SVH} />
+        <div ref={holdRef} aria-hidden="true" className="h-[120svh] md:h-[150svh]" data-hold-svh={HOLD_SVH} />
       </div>
 
       <motion.div

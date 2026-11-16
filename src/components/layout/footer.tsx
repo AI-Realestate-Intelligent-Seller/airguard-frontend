@@ -1,8 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { Reveal } from "@/components/motion/reveal";
 import { AnimatedLogo } from "@/components/motion/animated-logo";
 import { footerConnect, footerLearnMore } from "@/data/nav";
+import { useT } from "@/i18n/locale";
 
 // lucide-react dropped trademarked brand marks, so these three are inlined.
 const socialIcons = {
@@ -38,6 +41,7 @@ const socialLinks: Record<keyof typeof socialIcons, string> = {
 };
 
 export function Footer() {
+  const t = useT();
   return (
     <footer className="bg-navy text-white">
       {/* Phones: address and Learn More side by side, Connect across the row below. md+: three columns. */}
@@ -49,27 +53,27 @@ export function Footer() {
           <address className="mt-4 text-sm not-italic text-white/70 leading-relaxed">
             AirGuard Health
             <br />
-            21200 S. LaGrange Rd, Suite 142
+            <bdi dir="ltr">21200 S. LaGrange Rd, Suite 142</bdi>
             <br />
-            Frankfort, IL 60423
+            <bdi dir="ltr">Frankfort, IL 60423</bdi>
             <br />
             <Link href="mailto:info@airguardhealth.com" className="hover:text-white">
               info@<wbr />airguardhealth.com
             </Link>
             <br />
-            <Link href="tel:+18774123405" className="hover:text-white">
+            <Link href="tel:+18774123405" dir="ltr" className="hover:text-white">
               (877) 412-3405
             </Link>
           </address>
         </Reveal>
 
         <Reveal delay={0.08} className="min-w-0">
-          <h4 className="text-sm font-medium text-white/90">Learn More</h4>
+          <h4 className="text-sm font-medium text-white/90">{t("Learn More")}</h4>
           <ul className="mt-4 space-y-2">
             {footerLearnMore.map((item) => (
-              <li key={item.href}>
+              <li key={item.label}>
                 <Link href={item.href} className="text-sm text-white/70 hover:text-white">
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               </li>
             ))}
@@ -77,12 +81,12 @@ export function Footer() {
         </Reveal>
 
         <Reveal from="right" delay={0.16} className="col-span-2 md:col-span-1">
-          <h4 className="text-sm font-medium text-white/90">Connect</h4>
+          <h4 className="text-sm font-medium text-white/90">{t("Connect")}</h4>
           <ul className="mt-4 space-y-2">
             {footerConnect.map((item) => (
-              <li key={item.href}>
+              <li key={item.label}>
                 <Link href={item.href} className="text-sm text-white/70 hover:text-white">
-                  {item.label}
+                  {t(item.label)}
                 </Link>
               </li>
             ))}
@@ -107,7 +111,7 @@ export function Footer() {
       <div className="border-t border-white/10 py-6">
         <Container>
           <p className="text-xs text-white/50">
-            &copy; 2026 AirGuard Health. All rights reserved.
+            {t("© 2026 AirGuard Health. All rights reserved.")}
           </p>
         </Container>
       </div>

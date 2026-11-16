@@ -8,8 +8,8 @@ import { modelById, type ModelId } from "@/data/airguard-models";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { cn } from "@/lib/utils";
 import { type } from "@/components/products/type";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 /** Each image's own backdrop (white render, grey beam diagram, transparent cut-outs). */
 const PANEL_BG: Record<string, string> = {
   lighting: "#ffffff",

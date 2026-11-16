@@ -18,7 +18,9 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Reveal } from "@/components/motion/reveal";
-import { ANY_TYPE, contactProducts } from "@/data/contact-products";
+import { contactProducts } from "@/data/contact-products";
+import { EnvelopeFlight } from "@/components/company/envelope-flight";
+import { useMotionPreference } from "@/hooks/use-motion-preference";
 
 // Product images
 import lt from "../../../public/images/site/airguard/product-lt.webp";
@@ -28,6 +30,7 @@ import drOrringtonDemo from "../../../public/images/site/about/dr-orrington-demo
 import ltTesting from "../../../public/images/site/about/lt-testing.webp";
 import drJamesOrrington from "../../../public/images/site/about/dr-james-orrington.webp";
 import tinaWirtz from "../../../public/images/site/about/tina-wirtz.webp";
+import { useT } from "@/i18n/locale";
 
 const story = [
   {
@@ -109,26 +112,26 @@ function Associates() {
 
 function PageHero() {
   return (
-    <section className="company-hero relative overflow-hidden bg-[#0a1829] text-white">
+    <section className="company-hero relative overflow-hidden bg-[#f3f6fb] pt-[72px] text-navy md:pt-[108px] dark:bg-[#0b1322]">
       <div aria-hidden="true" className="company-orbits" />
       <Container className="relative grid items-center gap-10 py-20 lg:grid-cols-[1.1fr_1fr] lg:py-32">
         <Reveal>
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 backdrop-blur-md">
-            <HeartPulse size={14} className="text-[#b4e4db]" />
-            <span className="text-[11px] font-medium uppercase tracking-[.22em] text-[#a8d8db]">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-brand-500/20 bg-brand-500/[0.06] px-4 py-1.5">
+            <HeartPulse size={14} className="text-brand-500" />
+            <span className="text-xs font-medium uppercase tracking-[0.08em] text-brand-600 dark:text-brand-300">
               Our Story · Advancing Dentistry & Operatory Wellness
             </span>
           </div>
 
-          <h1 className="max-w-3xl text-4xl leading-[1.08] tracking-tight sm:text-5xl md:text-7xl">
+          <h1 className="max-w-3xl text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
             Born from dentistry.
             <br />
-            <span className="font-serif italic text-[#b4e4db]">
+            <span className="text-brand-500 dark:text-brand-300">
               Built for whole-practice wellness.
             </span>
           </h1>
 
-          <p className="mt-7 max-w-xl text-base leading-8 text-white/75">
+          <p className="mt-7 max-w-xl text-base leading-8 text-muted-foreground">
             The AirGuard™ story begins chairside with a dentist, an unprecedented clinical challenge, and the unyielding belief that dentistry and healthcare wellness deserve better protection.
           </p>
 
@@ -153,20 +156,20 @@ function PageHero() {
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="inline-block rounded-full bg-[#b4e4db] px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-[#0a1829]">
+                      <span className="inline-block rounded-full bg-brand-500 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.06em] text-white">
                         Chairside Dentistry
                       </span>
-                      <span className="text-xs font-semibold text-white">
+                      <span className="text-xs font-semibold text-navy">
                         Dr. James Orrington II, DDS · Founder
                       </span>
                     </div>
-                    <p className="mt-1 text-xs text-white/70">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       Pioneering chairside protection and whole-practice wellness.
                     </p>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-[#b4e4db]">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-brand-500/25 px-3 py-1 text-xs text-brand-600 dark:text-brand-300">
                     <ShieldCheck size={14} />
-                    <span>Clinically Validated</span>
+                    <span>Founder-led design</span>
                   </div>
                 </div>
               </div>
@@ -189,7 +192,7 @@ export function AboutPage() {
         <Container>
           <Reveal>
             <div className="flex items-center gap-2">
-              <Sparkles size={16} className="text-[#52757d]" />
+              <Sparkles size={16} className="text-[#4067b1]" />
               <p className="company-kicker !mb-0">From a practice to a purpose</p>
             </div>
             <h2 className="company-title mt-3">
@@ -237,11 +240,11 @@ export function AboutPage() {
                   tabIndex={active === i ? 0 : -1}
                   className={`flex items-center gap-5 rounded-2xl border p-6 text-left transition-all duration-300 ${
                     active === i
-                      ? "border-[#adc4cc] bg-white shadow-md ring-1 ring-[#adc4cc]/30"
+                      ? "border-[#b9c9e6] bg-white shadow-md ring-1 ring-[#b9c9e6]/30"
                       : "border-transparent text-slate-500 hover:bg-white/60"
                   }`}
                 >
-                  <span className="font-serif text-3xl italic text-[#6c969d]">
+                  <span className="text-2xl font-medium tabular-nums text-[#4067b1]">
                     {s.number}
                   </span>
                   <div>
@@ -261,12 +264,12 @@ export function AboutPage() {
               className="rounded-3xl border border-slate-200/80 bg-white p-8 shadow-sm md:p-12"
             >
               <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#edf4f6] px-3 py-0.5 text-xs font-semibold text-[#24465f]">
+                <span className="rounded-full bg-[#eef3fb] px-3 py-0.5 text-xs font-semibold text-[#2b3f63]">
                   {story[active].kicker}
                 </span>
               </div>
 
-              <h3 className="mt-4 text-2xl font-medium leading-tight text-[#152e43] md:text-3xl">
+              <h3 className="mt-4 text-2xl font-medium leading-tight text-[#172236] md:text-3xl">
                 {story[active].title}
               </h3>
 
@@ -298,7 +301,7 @@ export function AboutPage() {
         <Container className="grid items-center gap-14 lg:grid-cols-2">
           {/* Dual Visual Card: LT Product + Real Operatory Testing with proper height */}
           <Reveal className="space-y-6">
-            <div className="relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-[#eaf0f2] p-8 shadow-sm md:p-10">
+            <div className="relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-[#eef3fb] p-8 shadow-sm md:p-10">
               <span className="company-kicker">Refined around real dentistry</span>
               <div className="w-full flex items-center justify-center min-h-[260px] py-2">
                 <Image
@@ -343,8 +346,8 @@ export function AboutPage() {
 
           {/* Testing Content */}
           <Reveal>
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#edf4f6] px-3.5 py-1 text-xs font-semibold text-[#24465f]">
-              <ShieldCheck size={14} className="text-[#315974]" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#eef3fb] px-3.5 py-1 text-xs font-semibold text-[#2b3f63]">
+              <ShieldCheck size={14} className="text-[#4067b1]" />
               <span>Evidence-Based Innovation</span>
             </div>
 
@@ -379,19 +382,19 @@ export function AboutPage() {
       </section>
 
       {/* Voices from the Practice — Featuring Full Generous Portraits of Doctors & Hygienists */}
-      <section className="bg-[#102639] py-20 text-white md:py-28">
+      <section className="bg-[#172236] py-20 text-white md:py-28">
         <Container>
           <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <p className="company-kicker !text-[#a8d8db]">
+              <p className="company-kicker !text-[#a9c1ec]">
                 Voices from the dental practice
               </p>
               <h2 className="company-title !text-white">
                 Care in dentistry and wellness, in their own words.
               </h2>
             </div>
-            <span className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-[#b4e4db]">
-              Real Clinicians · Verified Experience
+            <span className="rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-medium text-[#a9c1ec]">
+              In their own words
             </span>
           </div>
 
@@ -399,7 +402,7 @@ export function AboutPage() {
             {quotes.map((q) => (
               <Reveal
                 key={q.name}
-                className="group relative flex flex-col sm:flex-row gap-6 items-start rounded-3xl border border-white/10 bg-white/[0.04] p-6 sm:p-7 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:border-[#b4e4db]/30"
+                className="group relative flex flex-col sm:flex-row gap-6 items-start rounded-3xl border border-white/10 bg-white/[0.04] p-6 sm:p-7 shadow-2xl backdrop-blur-sm transition-all duration-300 hover:border-[#a9c1ec]/30"
               >
                 {/* Clean Doctor / Hygienist Portrait — No dark borders or letterboxes */}
                 <div className="w-full sm:w-[220px] md:w-[240px] shrink-0">
@@ -411,7 +414,7 @@ export function AboutPage() {
                     />
                   </div>
                   <div className="mt-3">
-                    <span className="text-[10px] uppercase tracking-wider text-[#b4e4db] font-semibold block">
+                    <span className="text-[10px] uppercase tracking-wider text-[#a9c1ec] font-semibold block">
                       {q.badge}
                     </span>
                     <p className="text-sm font-semibold text-white mt-0.5">{q.name}</p>
@@ -422,7 +425,7 @@ export function AboutPage() {
                 {/* Testimonial Quote & Clinician Credentials */}
                 <div className="flex-1 flex flex-col justify-between self-stretch">
                   <div>
-                    <Quote className="text-[#a8d8db] mb-3" size={32} />
+                    <Quote className="text-[#a9c1ec] mb-3" size={32} />
                     <blockquote className="text-base sm:text-lg leading-relaxed text-white/90 font-light">
                       &ldquo;{q.text}&rdquo;
                     </blockquote>
@@ -430,7 +433,7 @@ export function AboutPage() {
 
                   <div className="mt-6 border-t border-white/10 pt-4">
                     <h4 className="text-sm font-semibold text-white">{q.name}</h4>
-                    <p className="text-xs text-[#b4e4db] font-medium">{q.role}</p>
+                    <p className="text-xs text-[#a9c1ec] font-medium">{q.role}</p>
                     <p className="text-[11px] text-white/50 mt-0.5">
                       Advocate for Modern Dentistry, Clinical Ergonomics &amp; Whole-Practice Wellness
                     </p>
@@ -443,7 +446,7 @@ export function AboutPage() {
       </section>
 
       {/* Bring Better Protection to Your Practice */}
-      <section className="bg-[#e8f0ee] py-20">
+      <section className="bg-[#eef3fb] py-20">
         <Container className="grid items-center gap-8 md:grid-cols-[1fr_auto]">
           <div>
             <h2 className="company-title">
@@ -470,6 +473,7 @@ export function AboutPage() {
 }
 
 export function ContactPage() {
+  const t = useT();
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState("");
   const [topic, setTopic] = useState("Dentistry & Product questions");
@@ -477,6 +481,9 @@ export function ContactPage() {
   const [productIds, setProductIds] = useState<string[]>([]);
   const [types, setTypes] = useState<Record<string, string[]>>({});
   const [productError, setProductError] = useState(false);
+  /** The send-off: envelope flight, then the confirmation card. */
+  const [sent, setSent] = useState<{ key: number; from: { x: number; y: number } | null; summary: string } | null>(null);
+  const reduceMotion = useMotionPreference();
   const chosen = contactProducts.filter((p) => productIds.includes(p.id));
 
   const toggleProduct = (id: string) => {
@@ -513,33 +520,27 @@ export function ContactPage() {
     }
   }
 
-  function prepareEmail(e: FormEvent<HTMLFormElement>) {
+  function submitInquiry(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (chosen.length === 0) {
       setProductError(true);
       document.getElementById("contact-products")?.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
     }
-    const data = new FormData(e.currentTarget);
-    const productLines = chosen
-      .map((p) => {
-        const picked = types[p.id] ?? [];
-        const detail = p.types.length ? (picked.length ? picked.join(", ") : ANY_TYPE) : "";
-        return `- ${p.label}${detail ? `: ${detail}` : ""}`;
-      })
-      .join("\n");
-    const body = `Name: ${data.get("name")}\nEmail: ${data.get("email")}\nPractice: ${
-      data.get("practice") || "Not provided"
-    }\nProducts:\n${productLines}\n\n${data.get("message")}`;
+    // CRM hook-up goes here: send the form (name, email, practice, topic, the chosen products
+    // with their types, message) to the CRM. For now only the send-off animation runs.
     const named = chosen.filter((p) => p.id !== "general").map((p) => p.label);
-    window.location.assign(
-      `mailto:info@airguardhealth.com?subject=${encodeURIComponent(
-        `AirGuard inquiry — ${topic}${named.length ? ` · ${named.join(", ")}` : ""}`
-      )}&body=${encodeURIComponent(body)}`
-    );
-    setStatus(
-      "Your email draft is ready in your email app. Review it and send it there. If no app opened, email info@airguardhealth.com directly."
-    );
+    const btn = (e.nativeEvent as SubmitEvent).submitter?.getBoundingClientRect();
+    setSent((prev) => ({
+      key: (prev?.key ?? 0) + 1,
+      from: btn ? { x: btn.left + btn.width / 2, y: btn.top + btn.height / 2 } : null,
+      summary: named.length ? named.join(" · ") : topic,
+    }));
+    // a fresh form for the next inquiry
+    e.currentTarget.reset();
+    setProductIds([]);
+    setTypes({});
+    setStatus("");
   }
 
   return (
@@ -548,23 +549,23 @@ export function ContactPage() {
       <section id="inquiry" className="scroll-mt-24 bg-[#f7f8fa] pb-20 pt-[calc(72px+3rem)] md:pb-28 md:pt-[calc(108px+4rem)]">
         <Container className="grid items-start gap-14 lg:grid-cols-[.8fr_1.2fr]">
           <Reveal>
-            <p className="company-kicker">Contact us</p>
+            <p className="company-kicker">{t("Contact us")}</p>
             <h1 className="company-title">
-              Here to help
+              {t("Here to help")}
               <br />
-              your practice move forward.
+              {t("your practice move forward.")}
             </h1>
             <div className="mt-10 space-y-7">
               <div className="company-contact-row">
                 <Mail />
                 <div>
-                  <p>Email our team</p>
-                  <a href="mailto:info@airguardhealth.com">info@airguardhealth.com</a>
+                  <p>{t("Email our team")}</p>
+                  <a href="mailto:info@airguardhealth.com" dir="ltr">info@airguardhealth.com</a>
                 </div>
                 <button
                   onClick={copyEmail}
-                  aria-label="Copy email address"
-                  className="ml-auto rounded-lg p-2 hover:bg-slate-200"
+                  aria-label={t("Copy email address")}
+                  className="ml-auto cursor-pointer rounded-lg p-2 hover:bg-slate-200"
                 >
                   {copied ? <Check size={18} /> : <Copy size={18} />}
                 </button>
@@ -572,28 +573,29 @@ export function ContactPage() {
               <div className="company-contact-row">
                 <Phone />
                 <div>
-                  <p>Give us a call</p>
-                  <a href="tel:+18774123405">(877) 412-3405</a>
+                  <p>{t("Give us a call")}</p>
+                  <a href="tel:+18774123405" dir="ltr">(877) 412-3405</a>
                 </div>
                 <a
                   href="tel:+18774123405"
                   aria-label="Let’s talk: call (877) 412-3405"
-                  className="ml-auto inline-flex shrink-0 items-center gap-2 self-center rounded-full bg-[#152e43] px-4 py-2 text-sm font-medium !text-white !no-underline transition-colors hover:bg-[#24465f]"
+                  className="ml-auto inline-flex shrink-0 items-center gap-2 self-center rounded-full bg-[#172236] px-4 py-2 text-sm font-medium !text-white !no-underline transition-colors hover:bg-[#2b3f63]"
                 >
-                  Let’s talk
-                  <ArrowRight size={15} aria-hidden="true" />
+                  {t("Let’s talk")}
+                  <ArrowRight size={15} aria-hidden="true" className="rtl:rotate-180" />
                 </a>
               </div>
               <div className="company-contact-row">
                 <MapPin />
                 <div>
-                  <p>Our address</p>
+                  <p>{t("Our address")}</p>
+                  {/* a US address reads left to right in every language */}
                   <address className="not-italic leading-7">
-                    21200 South LaGrange Rd.
+                    <bdi dir="ltr">21200 South LaGrange Rd.</bdi>
                     <br />
-                    Suite 142
+                    <bdi dir="ltr">Suite 142</bdi>
                     <br />
-                    Frankfort, IL 60423
+                    <bdi dir="ltr">Frankfort, IL 60423</bdi>
                   </address>
                   <a
                     className="mt-3 inline-flex items-center gap-2 text-sm"
@@ -601,36 +603,36 @@ export function ContactPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Get directions
+                    {t("Get directions")}
                     <ArrowUpRight size={15} />
                   </a>
                 </div>
               </div>
             </div>
             <p role="status" className="mt-4 text-sm text-slate-500">
-              {copied ? "Email address copied." : ""}
+              {copied ? t("Email address copied.") : ""}
             </p>
           </Reveal>
 
-          <Reveal className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_20px_70px_#10263908] md:p-10">
-            <form id="contact-form" onSubmit={prepareEmail} className="company-form scroll-mt-28">
-              <h3 className="text-2xl text-[#152e43]">Let’s start with you.</h3>
+          <Reveal className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-[0_20px_70px_#17223608] md:p-10">
+            <form id="contact-form" onSubmit={submitInquiry} className="company-form scroll-mt-28">
+              <h3 className="text-2xl text-[#172236]">{t("Let’s start with you.")}</h3>
               <p className="mt-3 text-sm leading-6 text-slate-500">
-                Tell us what you have in mind. We’ll prepare an email for you to review and send.
+                {t("Tell us what you have in mind and our team will get back to you.")}
               </p>
               <fieldset className="my-7">
-                <legend className="mb-3 text-sm">I’m interested in</legend>
+                <legend className="mb-3 text-sm">{t("I’m interested in")}</legend>
                 <div className="flex flex-wrap gap-2">
                   {[
                     "Dentistry & Product questions",
                     "Purchase inquiry for clinic",
                     "General practice questions",
-                  ].map((t) => (
+                  ].map((tp) => (
                     <label
-                      key={t}
+                      key={tp}
                       className={`cursor-pointer rounded-full border px-4 py-2 text-xs transition-colors ${
-                        topic === t
-                          ? "border-[#315974] bg-[#edf4f6] text-[#24465f]"
+                        topic === tp
+                          ? "border-[#4067b1] bg-[#eef3fb] text-[#2b3f63]"
                           : "border-slate-200 text-slate-500"
                       }`}
                     >
@@ -638,22 +640,22 @@ export function ContactPage() {
                         className="sr-only"
                         type="radio"
                         name="topic"
-                        value={t}
-                        checked={topic === t}
-                        onChange={() => setTopic(t)}
+                        value={tp}
+                        checked={topic === tp}
+                        onChange={() => setTopic(tp)}
                       />
-                      {t}
+                      {t(tp)}
                     </label>
                   ))}
                 </div>
               </fieldset>
               <div className="grid gap-5 sm:grid-cols-2">
                 <label>
-                  Your name
+                  {t("Your name")}
                   <input name="name" autoComplete="name" required maxLength={100} />
                 </label>
                 <label>
-                  Email address
+                  {t("Email address")}
                   <input
                     type="email"
                     name="email"
@@ -664,8 +666,8 @@ export function ContactPage() {
                 </label>
               </div>
               <label className="mt-5 block">
-                Dental Practice / Company{" "}
-                <span className="text-slate-400">(optional)</span>
+                {t("Dental Practice / Company")}{" "}
+                <span className="text-slate-400">{t("(optional)")}</span>
                 <input
                   name="practice"
                   autoComplete="organization"
@@ -675,18 +677,18 @@ export function ContactPage() {
               {/* Products (any number), then the types within each chosen product (any number) */}
               <div id="contact-products" className="mt-5">
                 <p id="contact-products-label" className="text-[13px] text-[#425865] dark:text-[#c5d2ea]">
-                  Products <span className="text-[#7a8f99]">· choose all that apply</span>
+                  {t("Products")} <span className="text-[#7a8f99]">{t("· choose all that apply")}</span>
                 </p>
                 <div role="group" aria-labelledby="contact-products-label" className="mt-2.5 flex flex-wrap gap-2">
                   {contactProducts.map((p) => (
                     <Chip key={p.id} on={productIds.includes(p.id)} onClick={() => toggleProduct(p.id)}>
-                      {p.label}
+                      {t(p.label)}
                     </Chip>
                   ))}
                 </div>
                 {productError && (
                   <p role="alert" className="mt-2 text-xs text-[#b42318] dark:text-[#ff8a80]">
-                    Choose at least one product.
+                    {t("Choose at least one product.")}
                   </p>
                 )}
               </div>
@@ -699,7 +701,7 @@ export function ContactPage() {
                   return (
                     <div key={p.id} className="mt-5 rounded-xl border border-[#d8e1e5] bg-[#fafcfc] p-4 dark:border-[#8fb3ef33] dark:bg-[#0f1a2e]">
                       <p id={labelId} className="text-[13px] text-[#425865] dark:text-[#c5d2ea]">
-                        {p.label} <span className="text-[#7a8f99]">· {picked.length ? `${picked.length} selected` : "whole range, or choose"}</span>
+                        {t(p.label)} <span className="text-[#7a8f99]">· {picked.length ? t("{n} selected", { n: picked.length }) : t("whole range, or choose")}</span>
                       </p>
                       <div role="group" aria-labelledby={labelId} className="mt-2.5 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
                         {p.types.map((t) => (
@@ -713,11 +715,11 @@ export function ContactPage() {
                 })}
 
               <label className="mt-5 block">
-                How can we help?
+                {t("How can we help?")}
                 <textarea name="message" rows={5} required maxLength={3000} />
               </label>
               <button className="company-button mt-6" type="submit">
-                Send Inquiry
+                {t("Send Inquiry")}
                 <ArrowUpRight size={17} />
               </button>
               <p role="status" className="mt-4 text-sm leading-6 text-slate-500">
@@ -728,6 +730,15 @@ export function ContactPage() {
         </Container>
       </section>
       <Associates />
+      {sent && (
+      <EnvelopeFlight
+        key={sent.key}
+        from={sent.from}
+        reduce={reduceMotion}
+        summary={sent.summary}
+        onClose={() => setSent(null)}
+      />
+      )}
     </>
   );
 }
@@ -739,16 +750,16 @@ function Chip({ on, onClick, small, children }: { on: boolean; onClick: () => vo
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-full border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a929c] ${
+      className={`inline-flex items-center gap-1.5 rounded-full border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4067b1] ${
         small ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"
       } ${
         on
           ? "border-brand-500 bg-brand-500 text-white"
-          : "border-[#d8e1e5] bg-white text-[#152e43] hover:border-brand-500 dark:border-[#8fb3ef33] dark:bg-[#0f1a2e] dark:text-[#eef2fa]"
+          : "border-[#d8e1e5] bg-white text-[#172236] hover:border-brand-500 dark:border-[#8fb3ef33] dark:bg-[#0f1a2e] dark:text-[#eef2fa]"
       }`}
     >
       {on && <Check size={14} aria-hidden="true" />}
-      {children}
+      <bdi>{children}</bdi>
     </button>
   );
 }

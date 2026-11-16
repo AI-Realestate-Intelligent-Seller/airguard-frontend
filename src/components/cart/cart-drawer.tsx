@@ -6,8 +6,9 @@ import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, ChevronsRight, Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { cart, cartCount, cartTotal, formatUsd, useCart } from "@/lib/cart";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
+import { EASE } from "@/lib/motion";
+import { localeMeta, useLocale, useT } from "@/i18n/locale";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /**
  * The cart, sliding in from the right. Opens when something is added or the header cart is
@@ -17,6 +18,8 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export function CartDrawer() {
   const { items, open } = useCart();
   const reduce = useMotionPreference();
+  const t = useT();
+  const rtl = localeMeta(useLocale()).dir === "rtl";
   const closeRef = useRef<HTMLButtonElement>(null);
   const count = cartCount(items);
   const { total, unpriced } = cartTotal(items);
@@ -39,7 +42,7 @@ export function CartDrawer() {
         <div className="fixed inset-0 z-100">
           <motion.button
             type="button"
-            aria-label="Close cart"
+            aria-label={t("Close cart")}
             tabIndex={-1}
             onClick={cart.close}
             initial={{ opacity: 0 }}
@@ -51,17 +54,17 @@ export function CartDrawer() {
           <motion.aside
             role="dialog"
             aria-modal="true"
-            aria-label="Your cart"
-            initial={reduce ? { opacity: 0 } : { x: "100%" }}
+            aria-label={t("Your cart")}
+            initial={reduce ? { opacity: 0 } : { x: rtl ? "-100%" : "100%" }}
             animate={reduce ? { opacity: 1 } : { x: 0 }}
-            exit={reduce ? { opacity: 0 } : { x: "100%" }}
+            exit={reduce ? { opacity: 0 } : { x: rtl ? "-100%" : "100%" }}
             transition={{ duration: 0.55, ease: EASE }}
-            className="absolute inset-y-0 right-0 flex w-full max-w-105 flex-col border-l border-border bg-background shadow-[-30px_0_60px_-30px_rgba(23,34,54,0.45)]"
+            className="absolute inset-y-0 end-0 flex w-full max-w-105 flex-col border-s border-border bg-background shadow-[-30px_0_60px_-30px_rgba(23,34,54,0.45)]"
           >
             <header className="flex items-center justify-between gap-3 border-b border-border px-6 py-5">
               <div className="flex items-center gap-3">
                 <ShoppingCart className="size-5 text-brand-500" aria-hidden="true" />
-                <h2 className="text-lg font-medium text-navy">Your cart</h2>
+                <h2 className="text-lg font-medium text-navy">{t("Your cart")}</h2>
                 <span className="rounded-full bg-brand-500 px-2 py-0.5 text-xs font-semibold tabular-nums text-white">{count}</span>
               </div>
               <button
@@ -70,7 +73,7 @@ export function CartDrawer() {
                 onClick={cart.close}
                 className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium text-navy hover:border-brand-500 hover:text-brand-500 focus-visible:outline-2 focus-visible:outline-brand-400"
               >
-                Minimize <ChevronsRight className="size-4" aria-hidden="true" />
+                {t("Minimize")} <ChevronsRight className="size-4 rtl:rotate-180" aria-hidden="true" />
               </button>
             </header>
 
@@ -79,7 +82,7 @@ export function CartDrawer() {
                 <div className="grid h-full place-items-center text-center">
                   <div>
                     <ShoppingCart className="mx-auto size-10 text-navy/20" aria-hidden="true" />
-                    <p className="mt-3 text-sm text-muted-foreground">Your cart is empty.</p>
+                    <p className="mt-3 text-sm text-muted-foreground">{t("Your cart is empty.")}</p>
                   </div>
                 </div>
               ) : (
@@ -109,7 +112,7 @@ export function CartDrawer() {
                             </div>
                             <button
                               type="button"
-                              aria-label={`Remove ${i.name}`}
+                              aria-label={t("Remove {name}", { name: i.name })}
                               onClick={() => cart.remove(i.id)}
                               className="grid size-8 shrink-0 place-items-center rounded-full text-navy/50 hover:bg-secondary hover:text-navy"
                             >
@@ -120,7 +123,7 @@ export function CartDrawer() {
                             <div className="inline-flex items-center rounded-full border border-border">
                               <button
                                 type="button"
-                                aria-label={`One less ${i.name}`}
+                                aria-label={t("One less {name}", { name: i.name })}
                                 onClick={() => cart.setQty(i.id, i.qty - 1)}
                                 className="grid size-8 place-items-center rounded-full text-navy hover:text-brand-500"
                               >
@@ -131,7 +134,7 @@ export function CartDrawer() {
                               </span>
                               <button
                                 type="button"
-                                aria-label={`One more ${i.name}`}
+                                aria-label={t("One more {name}", { name: i.name })}
                                 onClick={() => cart.setQty(i.id, i.qty + 1)}
                                 className="grid size-8 place-items-center rounded-full text-navy hover:text-brand-500"
                               >
@@ -139,7 +142,7 @@ export function CartDrawer() {
                               </button>
                             </div>
                             <p className="text-sm font-medium tabular-nums text-navy">
-                              {i.price === null ? <span className="text-xs font-normal text-muted-foreground">Price on request</span> : formatUsd(i.price * i.qty)}
+                              {i.price === null ? <span className="text-xs font-normal text-muted-foreground">{t("Price on request")}</span> : formatUsd(i.price * i.qty)}
                             </p>
                           </div>
                         </div>
@@ -153,18 +156,18 @@ export function CartDrawer() {
             {items.length > 0 && (
               <footer className="border-t border-border px-6 py-5">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-muted-foreground">Subtotal</span>
+                  <span className="text-sm text-muted-foreground">{t("Subtotal")}</span>
                   <span className="text-xl font-medium tabular-nums text-navy">
-                    {total === 0 && unpriced ? <span className="text-base text-muted-foreground">On request</span> : formatUsd(total)}
+                    {total === 0 && unpriced ? <span className="text-base text-muted-foreground">{t("On request")}</span> : formatUsd(total)}
                   </span>
                 </div>
-                {unpriced && total > 0 && <p className="mt-1 text-xs text-muted-foreground">Items priced on request are quoted separately.</p>}
+                {unpriced && total > 0 && <p className="mt-1 text-xs text-muted-foreground">{t("Items priced on request are quoted separately.")}</p>}
                 <Link
                   href="/contact"
                   onClick={cart.close}
                   className="group mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-brand-500 text-sm font-medium text-white hover:bg-brand-600"
                 >
-                  Proceed to checkout
+                  {t("Proceed to checkout")}
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               </footer>

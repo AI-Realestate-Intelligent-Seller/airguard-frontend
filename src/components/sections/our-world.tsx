@@ -13,6 +13,7 @@ import airguardImg from "../../../public/images/site/our-world/airguard.webp";
 import kingHydrogenImg from "../../../public/images/site/our-world/king-hydrogen.webp";
 import arcaneHerbImg from "../../../public/images/site/our-world/arcane-herb.webp";
 import bookStoreImg from "../../../public/images/site/our-world/book-store.webp";
+import { EASE } from "@/lib/motion";
 
 /*
  * "Our World": the four brands as expanding cards, adapted from the
@@ -115,7 +116,7 @@ function CountUp({ to, run }: { to: number; run: boolean }) {
       value.set(0);
       return;
     }
-    const controls = animate(value, to, { duration: 1.4, ease: [0.16, 1, 0.3, 1] });
+    const controls = animate(value, to, { duration: 1.4, ease: EASE });
     return () => controls.stop();
   }, [run, to, value]);
   return <motion.span className="tabular-nums">{shown}</motion.span>;

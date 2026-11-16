@@ -1,5 +1,5 @@
 import type { StaticImageData } from "next/image";
-import productXp from "../../public/images/site/airguard/product-xp.webp";
+import productXp from "../../public/images/site/airguard/product-xp-screen.webp";
 import productMp from "../../public/images/site/airguard/product-mp.webp";
 import productLt from "../../public/images/site/airguard/product-lt-hero.webp";
 import productCh from "../../public/images/site/airguard/product-ch.webp";

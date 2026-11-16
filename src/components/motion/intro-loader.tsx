@@ -63,7 +63,15 @@ export function IntroLoader({
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (reduced || !canvas || !ctx) {
+    // Once per browser session: a return visit (or another page) goes straight to the content.
+    // The head script adds `ag-intro-seen` before paint, so the overlay never flashes.
+    const seen = root.classList.contains('ag-intro-seen');
+    try {
+      sessionStorage.setItem('ag-intro-seen', '1');
+    } catch {
+      /* private mode: the intro just plays again */
+    }
+    if (seen || reduced || !canvas || !ctx) {
       // Nothing to play: show the page on the next frame
       const id = requestAnimationFrame(() => setPhase('done'));
       return () => cancelAnimationFrame(id);
@@ -202,16 +210,26 @@ export function IntroLoader({
     let done = false;
     let timer = 0;
     const start = performance.now();
-    const reveal = () => {
+    const reveal = (skipped = false) => {
       if (done) return;
       done = true;
       cancelAnimationFrame(raf);
+      removeSkip();
       setPhase('reveal');
+      // a skip hands the scroll back at once; the page still sharpens into view
+      if (skipped) root.style.overflow = prevOverflow;
       timer = window.setTimeout(() => {
         root.style.overflow = prevOverflow;
         setPhase('done');
       }, REVEAL_MS);
     };
+    // Any tap, click, key or scroll attempt skips the intro.
+    const skip = () => reveal(true);
+    const skipEvents = ['pointerdown', 'keydown', 'wheel', 'touchmove'] as const;
+    skipEvents.forEach((ev) => window.addEventListener(ev, skip, { passive: true }));
+    function removeSkip() {
+      skipEvents.forEach((ev) => window.removeEventListener(ev, skip));
+    }
 
     const frame = (now: number) => {
       const t = timeline((now - start) / 1000);
@@ -225,6 +243,7 @@ export function IntroLoader({
     return () => {
       cancelAnimationFrame(raf);
       clearTimeout(timer);
+      removeSkip();
       window.removeEventListener('resize', resize);
       root.style.overflow = prevOverflow;
     };

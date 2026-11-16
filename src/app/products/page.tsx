@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ProductRunway } from "@/components/products/product-runway";
 import { ModelLadder } from "@/components/products/model-ladder";
+import { FitFinder } from "@/components/products/fit-finder";
 // Hidden for now (2026-11-13): the XP opens in 3D in the hero instead.
 // import { XpExplorer } from "@/components/products/xp-explorer";
 import { CompareModels } from "@/components/products/compare-models";
@@ -53,6 +54,7 @@ export default function Page() {
       />
       {/* 1. Brand pills + the runway ring of AirGuard models */}
       <ProductRunway />
+      
       {/* 2. Climb the range, CH → XP (pinned on desktop) */}
       <ModelLadder />
       {/* 3. The flagship in 3D: hidden for now; every model opens in 3D in the hero instead */}
@@ -62,6 +64,8 @@ export default function Page() {
       {/* 5. Claims-safe proof, FAQs, next step */}
       {/* Claims section: hidden for now */}
       {/* <ProofSection /> */}
+      {/* Three questions to the right model, narrowing live */}
+      <FitFinder />
       <FaqSection />
       <ProductsCta />
     </>

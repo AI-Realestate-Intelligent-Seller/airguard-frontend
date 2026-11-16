@@ -104,7 +104,7 @@ export function ModelStage({
               className="group/label absolute left-0 top-0 transition-opacity duration-300 data-[active=0]:opacity-45 data-[active=0]:data-[hidden=1]:opacity-20"
             >
               <span className="absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500 shadow-[0_0_0_5px_rgba(64,103,177,0.18)] [left:var(--ax)] [top:var(--ay)] group-data-[active=1]/label:size-2.5 dark:bg-brand-300 dark:shadow-[0_0_0_5px_rgba(112,141,196,0.25)] dark:group-data-[active=1]/label:bg-white" />
-              <span className="absolute h-px origin-left bg-navy/30 [left:var(--ax)] [rotate:var(--ang)] [top:var(--ay)] [width:var(--len)] group-data-[active=1]/label:bg-navy/75" />
+              <span className="absolute h-px origin-left bg-navy/30 [left:var(--ax)] [rotate:var(--ang)] [top:var(--ay)] [width:var(--len)] group-data-[active=1]/label:bg-navy/[0.72]" />
               <span className="absolute -translate-y-1/2 [left:var(--ex)] [top:var(--ey)] group-data-[side=left]/label:-translate-x-full">
                 <span className="mx-1.5 block w-max rounded-full border border-navy/10 bg-white/90 px-3 py-1 text-[11px] font-medium tracking-[0.02em] text-navy/80 shadow-[0_8px_20px_-14px_rgba(23,34,54,0.5)] backdrop-blur-md dark:border-white/15 dark:bg-[#0e1a2e]/80 dark:text-white/85 dark:shadow-none dark:group-data-[active=1]/label:border-brand-400 dark:group-data-[active=1]/label:bg-brand-500 dark:group-data-[active=1]/label:text-white transition-colors group-data-[active=1]/label:border-brand-400 group-data-[active=1]/label:bg-brand-500 group-data-[active=1]/label:text-white">
                   {l.name}

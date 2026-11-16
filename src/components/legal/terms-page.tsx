@@ -359,8 +359,13 @@ export function TermsOfServicePage() {
     };
   }, []);
 
-  // Jump to hash if present on mount
+  // Jump to hash if present on mount (once; scrollToSection is a plain helper, read via a ref)
+  const scrollRef = useRef(scrollToSection);
   useEffect(() => {
+    scrollRef.current = scrollToSection;
+  });
+  useEffect(() => {
+    const scrollToSection = (id: string) => scrollRef.current(id);
     if (typeof window !== "undefined" && window.location.hash) {
       const hashId = window.location.hash.replace("#", "");
       if (termsData.some((s) => s.id === hashId)) {

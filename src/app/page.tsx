@@ -8,6 +8,7 @@ import { BookStore } from "@/components/sections/book-store";
 import { ArcaneHerbs } from "@/components/sections/arcane-herbs";
 import { GetInTouch } from "@/components/sections/get-in-touch";
 import { Handoff } from "@/components/motion/handoff";
+import { RelayBridge } from "@/components/motion/relay-bridge";
 
 export default function Home() {
   return (
@@ -26,27 +27,21 @@ export default function Home() {
         line="From protection at the dental chair to wellness at home, beginning with the water you drink."
         light
         next={
-          <Handoff
-            eyebrow="Better together"
-            from="Water"
-            to="Herbs"
-            accent="#a6d6b4"
-            line="Arcane Herb blends can be prepared with King Hydrogen water."
-            next={
-              <Handoff
-                eyebrow="Orrington Publishing"
-                from="Wellness"
-                to="Knowledge"
-                accent="#e6c68e"
-                line="The ideas behind our products, in books by Dr. James Orrington II."
-                next={<BookStore />}
-              >
-                <ArcaneHerbs />
-              </Handoff>
-            }
-          >
+          <>
             <Aurora3D />
-          </Handoff>
+            {/* King Hydrogen → Arcane Herb: streams of light run left to right through both */}
+            <RelayBridge />
+            <Handoff
+              eyebrow="Orrington Publishing"
+              from="Wellness"
+              to="Knowledge"
+              accent="#e6c68e"
+              line="The ideas behind our products, in books by Dr. James Orrington II."
+              next={<BookStore />}
+            >
+              <ArcaneHerbs />
+            </Handoff>
+          </>
         }
       >
         <AirGuard3D />

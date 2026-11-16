@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins, Instrument_Serif } from "next/font/google";
+import { Poppins, Instrument_Serif, Noto_Sans_Arabic } from "next/font/google";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ScrollProgress } from "@/components/motion/scroll-progress";
@@ -7,12 +7,22 @@ import { IntroLoader } from "@/components/motion/intro-loader";
 import { CartDrawer } from "@/components/cart/cart-drawer";
 import { MobileQuickBar } from "@/components/layout/mobile-quick-bar";
 import { THEME_SCRIPT } from "@/lib/theme";
+import { LOCALE_SCRIPT } from "@/i18n/script";
+import { LocaleCurtain } from "@/components/i18n/locale-curtain";
+import { DomTranslator } from "@/components/i18n/dom-translator";
 import "./globals.css";
 
 const poppins = Poppins({
-  variable: "--font-sans",
+  variable: "--font-poppins",
   subsets: ["latin"],
   weight: ["300", "400", "500", "700"],
+});
+
+// Arabic: Noto Sans Arabic for the Arabic script, Poppins still drawing Latin names and numbers
+const notoArabic = Noto_Sans_Arabic({
+  variable: "--font-arabic",
+  subsets: ["arabic"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const instrumentSerif = Instrument_Serif({
@@ -35,13 +45,21 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       // globals.css sets smooth scrolling; Next turns it off during route changes
       data-scroll-behavior="smooth"
-      className={`${poppins.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${poppins.variable} ${notoArabic.variable} ${instrumentSerif.variable} h-full antialiased`}
       // The theme script adds `dark` before React loads.
       suppressHydrationWarning
     >
       <head>
         {/* Applies the saved (or system) theme before first paint, so dark mode never flashes white. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* The saved language (and right-to-left for Arabic) before first paint */}
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_SCRIPT }} />
+        {/* The intro plays once per session: mark a repeat visit before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "try{if(sessionStorage.getItem('ag-intro-seen'))document.documentElement.classList.add('ag-intro-seen')}catch(e){}",
+          }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <ScrollProgress />
@@ -53,6 +71,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* Phones: buy / ask / call, always one tap away */}
         <MobileQuickBar />
         <CartDrawer />
+        <LocaleCurtain />
+        <DomTranslator />
       </body>
     </html>
   );

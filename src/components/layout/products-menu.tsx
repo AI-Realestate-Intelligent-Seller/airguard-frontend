@@ -10,16 +10,20 @@ import { Container } from "@/components/layout/container";
 import { productsMenu } from "@/data/products-menu";
 import { setMenuOpen } from "@/hooks/use-menu-open";
 import { cn } from "@/lib/utils";
+import { EASE } from "@/lib/motion";
+import { useT } from "@/i18n/locale";
 
 /**
  * Products mega-menu: one column per brand, each listing its variants.
  *
- * Opens on hover for pointer users and on click/keyboard for everyone else,
- * so it is reachable without a mouse. Escape closes it and returns focus to
+ * "Products" itself links to /products. The menu opens on hover for pointer users and from the
+ * chevron button for touch and keyboard. Products go to their detail pages; each family heading
+ * and its button at the foot of the column open /products with that family selected. Escape closes it and returns focus to
  * the trigger; a close is deferred briefly on pointer-out so the diagonal
  * travel from the trigger down into the panel doesn't dismiss it.
  */
 export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -77,7 +81,7 @@ export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
       filter: "blur(0px)",
       transition: shouldReduceMotion
         ? { duration: 0.15 }
-        : { duration: 0.42, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.07, delayChildren: 0.06 },
+        : { duration: 0.42, ease: EASE, staggerChildren: 0.07, delayChildren: 0.06 },
     },
     exit: shouldReduceMotion
       ? { opacity: 0, transition: { duration: 0.12 } }
@@ -91,13 +95,13 @@ export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
       y: 0,
       transition: shouldReduceMotion
         ? { duration: 0.15 }
-        : { duration: 0.45, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.045, delayChildren: 0.05 },
+        : { duration: 0.45, ease: EASE, staggerChildren: 0.045, delayChildren: 0.05 },
     },
   };
 
   const row: Variants = {
     hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -14 },
-    shown: { opacity: 1, x: 0, transition: { duration: 0.38, ease: [0.16, 1, 0.3, 1] } },
+    shown: { opacity: 1, x: 0, transition: { duration: 0.38, ease: EASE } },
   };
 
   return (
@@ -113,19 +117,31 @@ export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
         scheduleClose();
       }}
     >
-      <button
-        ref={triggerRef}
-        type="button"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => setOpen((v) => !v)}
-        className="flex cursor-pointer items-center gap-1 text-sm text-navy/80 transition-colors hover:text-brand-500"
-      >
-        Products
-        <ChevronDown
-          className={cn("size-3.5 transition-transform duration-300", open && "rotate-180")}
-        />
-      </button>
+      {/* "Products" goes to the products page; hovering it (or the chevron, for touch and keyboard) opens the menu */}
+      <div className="flex items-center">
+        <Link
+          href="/products"
+          onClick={() => {
+            setOpen(false);
+            onNavigate?.();
+          }}
+          onFocus={cancelClose}
+          className={cn("text-sm transition-colors hover:text-brand-500", open ? "text-brand-500" : "text-navy/80")}
+        >
+          {t("Products")}
+        </Link>
+        <button
+          ref={triggerRef}
+          type="button"
+          aria-expanded={open}
+          aria-haspopup="true"
+          aria-label={open ? t("Close the products menu") : t("Open the products menu")}
+          onClick={() => setOpen((v) => !v)}
+          className="-mr-1 grid size-7 cursor-pointer place-items-center rounded-full text-navy/60 transition-colors hover:bg-brand-50 hover:text-brand-500"
+        >
+          <ChevronDown className={cn("size-3.5 transition-transform duration-300", open && "rotate-180")} />
+        </button>
+      </div>
 
       <AnimatePresence>
         {open && (
@@ -136,7 +152,7 @@ export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="pointer-events-none absolute inset-x-0 top-full z-30 h-screen transform-gpu bg-navy/20 backdrop-blur-[2px]"
+            className="pointer-events-none absolute inset-x-0 top-full z-30 h-screen transform-gpu bg-[#172236]/25 backdrop-blur-[2px]"
           />
         )}
         {open && (
@@ -170,15 +186,26 @@ export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
                         style={{ background: `linear-gradient(180deg, ${col.accent}14, transparent 60%)` }}
                       />
 
-                      <div className="relative">
+                      {/* The family heading opens /products with this family selected */}
+                      <Link
+                        href={col.overview.href}
+                        onClick={() => {
+                          setOpen(false);
+                          onNavigate?.();
+                        }}
+                        className="group/head relative block"
+                      >
                         <span
                           aria-hidden
                           className="block h-0.5 w-8 rounded-full transition-all duration-500 group-hover/col:w-16"
                           style={{ backgroundColor: col.accent }}
                         />
-                        <p className="mt-3 text-sm font-semibold text-navy">{col.brand}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{col.blurb}</p>
-                      </div>
+                        <span className="mt-3 flex items-center gap-1 text-sm font-semibold text-navy transition-colors group-hover/head:text-brand-500">
+                          {col.brand}
+                          <ArrowRight className="size-3.5 -translate-x-1 opacity-0 transition-all duration-300 group-hover/head:translate-x-0 group-hover/head:opacity-100" aria-hidden />
+                        </span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">{t(col.blurb)}</span>
+                      </Link>
 
                       <ul className="relative mt-5 space-y-1">
                         {col.items.map((item) => (
@@ -214,7 +241,7 @@ export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
                                 <span className="block truncate text-sm text-navy/90 transition-colors group-hover/row:text-brand-500">
                                   {item.name}
                                 </span>
-                                <span className="block truncate text-xs text-muted-foreground">{item.note}</span>
+                                <span className="block truncate text-xs text-muted-foreground">{t(item.note)}</span>
                               </span>
                               <ArrowRight className="size-4 shrink-0 text-navy/25 transition-all duration-300 group-hover/row:translate-x-0.5 group-hover/row:text-brand-500" />
                             </Link>
@@ -228,11 +255,12 @@ export function ProductsMenu({ onNavigate }: { onNavigate?: () => void }) {
                           setOpen(false);
                           onNavigate?.();
                         }}
-                        className="relative mt-4 inline-flex items-center gap-1.5 text-xs font-medium transition-colors"
-                        style={{ color: col.accent }}
+                        className="group/ov relative mt-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors hover:text-white"
+                        style={{ color: col.accent, borderColor: `${col.accent}55`, ["--ov" as string]: col.accent }}
                       >
-                        {col.overview.label}
-                        <ArrowRight className="size-3.5 transition-transform duration-300 hover:translate-x-0.5" />
+                        <span aria-hidden className="absolute inset-0 -z-0 scale-x-0 rounded-full bg-[var(--ov)] transition-transform duration-300 group-hover/ov:scale-x-100" style={{ transformOrigin: "left" }} />
+                        <span className="relative">{t(col.overview.label, { n: col.overview.count ?? "" })}</span>
+                        <ArrowRight className="relative size-3.5 transition-transform duration-300 group-hover/ov:translate-x-0.5" />
                       </Link>
                     </motion.div>
                   ))}

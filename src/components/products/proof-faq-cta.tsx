@@ -10,8 +10,8 @@ import { Reveal } from "@/components/motion/reveal";
 import { TiltIn } from "@/components/motion/tilt-in";
 import { WordReveal } from "@/components/motion/word-reveal";
 import { cn } from "@/lib/utils";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /*
  * Proof, written to the Phase 1 claims register: what each model is (substantiated features),

@@ -9,8 +9,8 @@ import { modelById, type ModelId } from "@/data/airguard-models";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { cn } from "@/lib/utils";
 import { type } from "@/components/products/type";
+import { EASE } from "@/lib/motion";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 /** The CFD renders' own backdrop, so the panel and image read as one surface. */
 const CFD_BG = "#7476dc";
 /** The same backdrop as the VP9 animation decodes it, so the letterbox bands disappear. */

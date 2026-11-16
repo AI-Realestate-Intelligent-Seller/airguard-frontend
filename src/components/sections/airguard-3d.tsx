@@ -11,6 +11,7 @@ import { techTabs } from "@/data/airguard-technology";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { setXpLight } from "@/lib/xp-light";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
+import { EASE } from "@/lib/motion";
 
 /*
  * AirGuard XP up close: the interactive 3D model, with no control panel. Every part carries a
@@ -19,7 +20,6 @@ import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-pref
  * by itself) and hover a part to highlight its label and read what it does.
  * A plain section: it scrolls in after Our World and its content fades up.
  */
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 /** Part names and one-liners, in the scene's part order (airguard-xp-scene.ts). */
 const PARTS = [

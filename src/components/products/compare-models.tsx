@@ -7,6 +7,7 @@ import { compareColumns, compareRows, modelById } from "@/data/airguard-models";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
 import { Reveal } from "@/components/motion/reveal";
 import { cn } from "@/lib/utils";
+import { EASE } from "@/lib/motion";
 
 /*
  * The four models side by side (Phase 1 AirGuard Product Comparison, claims-safe wording).
@@ -210,7 +211,7 @@ function Cell({ value, row }: { value: boolean | string; row: number }) {
             initial={reduce ? false : { pathLength: 0 }}
             whileInView={{ pathLength: 1 }}
             viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.5, delay: Math.min(row, 16) * 0.04, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.5, delay: Math.min(row, 16) * 0.04, ease: EASE }}
           />
         </svg>
         <span className="sr-only">Yes</span>

@@ -2,6 +2,7 @@
 
 import { motion, type Variants } from "motion/react";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
+import { EASE } from "@/lib/motion";
 
 type WordRevealProps = {
   text: string;
@@ -35,7 +36,7 @@ export function WordReveal({ text, className, stagger = 0.06, delay = 0 }: WordR
       opacity: 1,
       y: 0,
       filter: "blur(0px)",
-      transition: { duration: 0.34, ease: [0.16, 1, 0.3, 1] },
+      transition: { duration: 0.34, ease: EASE },
     },
   };
 
