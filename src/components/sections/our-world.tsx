@@ -61,18 +61,6 @@ const worldDetails: World[] = [
     cta: "Explore King Hydrogen",
   },
   {
-    menuId: "book-store",
-    categoryLabel: "Knowledge & Research",
-    count: 3,
-    countLabel: "Titles",
-    summary:
-      "Books by Dr. James Orrington II on hydrogen water, health and building a better practice.",
-    image: bookStoreImg,
-    accent: "#a07a3c",
-    href: "#book-store",
-    cta: "Visit the Book Store",
-  },
-  {
     menuId: "arcane-herb",
     categoryLabel: "Natural Botanicals",
     count: arcaneHerbTeas.length,
@@ -83,6 +71,18 @@ const worldDetails: World[] = [
     accent: "#4f8a62",
     href: "#arcane-herbs",
     cta: "Explore Arcane Herb",
+  },
+  {
+    menuId: "book-store",
+    categoryLabel: "Knowledge & Research",
+    count: 3,
+    countLabel: "Titles",
+    summary:
+      "Books by Dr. James Orrington II on hydrogen water, health and building a better practice.",
+    image: bookStoreImg,
+    accent: "#a07a3c",
+    href: "#book-store",
+    cta: "Visit the Book Store",
   },
 ];
 

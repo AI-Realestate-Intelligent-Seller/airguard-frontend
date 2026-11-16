@@ -7,6 +7,7 @@ import { Aurora3D } from "@/components/sections/aurora-3d";
 import { BookStore } from "@/components/sections/book-store";
 import { ArcaneHerbs } from "@/components/sections/arcane-herbs";
 import { GetInTouch } from "@/components/sections/get-in-touch";
+import { Handoff } from "@/components/motion/handoff";
 
 export default function Home() {
   return (
@@ -16,14 +17,40 @@ export default function Home() {
       {/* The Journey opens through the hero's wheel, then the four brands (Our World) open over it */}
       <FamilyStory />
       <OurWorldStage />
-      {/* AirGuard XP in 3D: opens over the four cards, drag to turn, hover a part */}
-      <AirGuard3D />
-      {/* King Hydrogen Aurora in 3D, right beside it: drag to turn, hover a part */}
-      <Aurora3D />
-      {/* Orrington Publishing: The Throne and Liberty film (scroll plays it), then the store shelf */}
-      <BookStore />
-      {/* Arcane Herbs: its film played by the scroll, then Get in touch */}
-      <ArcaneHerbs />
+      {/* Health, then wellness: each section holds while the next rises over it (Handoff) */}
+      <Handoff
+        eyebrow="AirGuard Health"
+        from="Health"
+        to="Wellness"
+        accent="#8cc8f0"
+        line="From protection at the dental chair to wellness at home, beginning with the water you drink."
+        light
+        next={
+          <Handoff
+            eyebrow="Better together"
+            from="Water"
+            to="Herbs"
+            accent="#a6d6b4"
+            line="Arcane Herb blends can be prepared with King Hydrogen water."
+            next={
+              <Handoff
+                eyebrow="Orrington Publishing"
+                from="Wellness"
+                to="Knowledge"
+                accent="#e6c68e"
+                line="The ideas behind our products, in books by Dr. James Orrington II."
+                next={<BookStore />}
+              >
+                <ArcaneHerbs />
+              </Handoff>
+            }
+          >
+            <Aurora3D />
+          </Handoff>
+        }
+      >
+        <AirGuard3D />
+      </Handoff>
       {/* Get in touch, over the team photo */}
       <GetInTouch />
     </>

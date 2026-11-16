@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 export const chapters = [
-  ["discover", "Discover"], ["journey", "The journey"], ["our-world", "Our world"], ["airguard-3d", "Up close"], ["aurora-3d", "The Aurora"], ["book-store", "Book store"], ["arcane-herbs", "Arcane Herbs"],
+  ["discover", "Discover"], ["journey", "The journey"], ["our-world", "Our world"], ["airguard-3d", "Up close"], ["aurora-3d", "The Aurora"], ["arcane-herbs", "Arcane Herbs"], ["book-store", "Book store"],
   ["contact", "Connect"],
 ];
 

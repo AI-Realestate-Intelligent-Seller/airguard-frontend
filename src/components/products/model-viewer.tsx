@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { ModelSkeleton } from "@/components/three/model-skeleton";
 import { Hand } from "lucide-react";
 import { AirGuardStage } from "@/components/sections/airguard-3d";
 import type { ModelId } from "@/data/airguard-models";
@@ -49,9 +50,9 @@ function BasicStage({ model }: { model: "lt" | "ch" }) {
       <div ref={ref} role="img" aria-label={`Basic 3D model of AirGuard ${model.toUpperCase()}. Drag to turn it.`} className="absolute inset-0" />
       <AnimatePresence>
         {!ready && (
-          <motion.p exit={{ opacity: 0 }} className="pointer-events-none absolute inset-0 grid place-items-center text-sm text-navy/50">
-            {failed ? "The 3D view couldn't load in this browser." : "Preparing the 3D view…"}
-          </motion.p>
+          <motion.div exit={{ opacity: 0 }} className="absolute inset-0">
+            <ModelSkeleton failed={failed} />
+          </motion.div>
         )}
       </AnimatePresence>
       {ready && (

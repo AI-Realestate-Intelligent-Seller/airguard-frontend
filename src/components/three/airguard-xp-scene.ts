@@ -30,6 +30,9 @@ export function mountAirGuard(
     onSelect,
     onPick,
     numberedDots = false,
+    showLights = false,
+    lightCycle,
+    onLightChange,
   }: {
     onHover?: (info: HoverInfo) => void;
     /** The page's label element for each part; the scene keeps it pinned to its part. */
@@ -49,6 +52,12 @@ export function mountAirGuard(
     onPick?: (id: string | null) => void;
     /** Home page: phones show numbered dots, so the model is drawn larger with short leader lines. */
     numberedDots?: boolean;
+    /** Home page: show the four spotlight beams and the pool of light they cast below the guard, in the LED colour. */
+    showLights?: boolean;
+    /** Home page: LED colours ("#rrggbb") the lights cycle through on their own, fading between them. */
+    lightCycle?: string[];
+    /** Called with the index of the colour now showing in lightCycle. */
+    onLightChange?: (index: number) => void;
   } = {}
 ) {
 const reduced = reducedMotion;
@@ -352,11 +361,18 @@ for(const x of [-2.17,2.17])for(const z of [-1.60,1.60]){
   const lamp=new THREE.SpotLight(0xe4f3ff,2,7,THREE.MathUtils.degToRad(12.5),.6,1.4);
   lamp.position.set(0,-.18,0);lamp.target=target;g.add(lamp);deviceLights.push(lamp);
   const length=2.1;const beam=mesh(new THREE.ConeGeometry(1,length,40,1,true),new THREE.MeshBasicMaterial({color:0xe4f3ff,transparent:true,opacity:.055,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}),g,0,0,0);
-  beam.userData.noTint=true;beam.userData.length=length;
+  beam.userData.noTint=true;beam.userData.hitPassthrough=true;beam.userData.length=length;
   const direction=new THREE.Vector3(-x*.65,-2.1,-z*.65).normalize();beam.quaternion.setFromUnitVectors(new THREE.Vector3(0,-1,0),direction);
   beam.position.copy(direction.clone().multiplyScalar(length/2)).add(new THREE.Vector3(0,-.18,0));
   beam.visible=false;beam.castShadow=false;beamMeshes.push(beam);
 }
+
+// Home page: where the lights land. The LEDs and spotlights face down, so from above their colour
+// only shows as the beams and this soft pool on the working area below the guard.
+const lightPool = showLights
+  ? mesh(new THREE.PlaneGeometry(5.6, 4.4), new THREE.MeshBasicMaterial({ map: glowTexture, color: 0xf0f5ff, transparent: true, opacity: .55, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }), assemblies.precision, 0, -2.2, 0)
+  : null;
+if (lightPool) { lightPool.rotation.x = -Math.PI / 2; lightPool.castShadow = false; lightPool.userData.noTint = true; lightPool.userData.hitPassthrough = true; }
 
 // The display hinges on the molded plastic chassis, not the glass panel:
 // a rigid mount block on the rear frame rail carries the hinge barrels, and
@@ -479,12 +495,17 @@ for(const [x,glyph,action] of buttonBrief){
 // ── Device state: lights on in white, display showing its demo view (no controls). ──
 liveState.lightIndex = 1; // white
 liveState.beams = false;
+/** The page's LED colour (setLight), in place of the prototype's own modes. */
+let lightOverride=null;
 function syncDevice(){
-  const mode=modes[liveState.lightIndex],power=liveState.power?liveState.brightness:0;
-  lightMaterials.forEach(m=>{m.color.setHex(power?mode.hex:0xcbd2cd);m.emissive.setHex(mode.hex);m.emissiveIntensity=power*8});
-  diffuserMaterials.forEach(m=>{m.emissive.setHex(mode.hex);m.emissiveIntensity=power*1.1});
-  deviceLights.forEach(l=>{l.color.setHex(mode.hex);l.intensity=power*16;l.angle=THREE.MathUtils.degToRad(liveState.beam/2)});
-  beamMeshes.forEach(m=>{m.visible=false});
+  const mode=lightOverride??modes[liveState.lightIndex],power=liveState.power?liveState.brightness:0;
+  // A picked colour runs softer (lightOverride.k): at full strength ACES tone mapping pushes any hue to white.
+  const k=lightOverride?.k??1;
+  lightMaterials.forEach(m=>{m.color.setHex(power?mode.hex:0xcbd2cd);m.emissive.setHex(mode.hex);m.emissiveIntensity=power*8*k});
+  diffuserMaterials.forEach(m=>{m.emissive.setHex(mode.hex);m.emissiveIntensity=power*1.1*Math.max(k,.6)});
+  deviceLights.forEach(l=>{l.color.setHex(mode.hex);l.intensity=power*16*k;l.angle=THREE.MathUtils.degToRad(liveState.beam/2)});
+  beamMeshes.forEach(m=>{m.visible=showLights&&power>0;m.material.color.setHex(mode.hex);m.material.opacity=showLights?.11:.055;m.material.toneMapped=!showLights});
+  if(lightPool){lightPool.material.color.setHex(mode.hex);lightPool.visible=power>0}
   ledGlows.forEach(m=>{m.material.color.setHex(mode.hex);m.material.opacity=.9*power;m.visible=power>0});
   stripLights.forEach(l=>{l.color.setHex(mode.hex);l.intensity=power*.65});
   rearDisplay.visible=false;backDetails.visible=true;
@@ -666,8 +687,36 @@ let visible = true;
 const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; });
 io.observe(stage);
 
+// Home page: the lights cycle through the LED colours (softer, so each hue survives tone mapping).
+const cycle = (lightCycle ?? []).map(h => new THREE.Color(h));
+if (cycle.length) lightOverride = { hex: cycle[0].getHex(), k: .22 };
 displayPivot.rotation.x = THREE.MathUtils.degToRad(90 - liveState.flip);
 syncDevice();
+if (cycle.length) onLightChange?.(0);
+
+const LIGHT_HOLD = 2.4, LIGHT_FADE = 1.1;
+let cycleT = 0, shownLight = 0;
+const lightNow = new THREE.Color(), lightNext = new THREE.Color();
+/** Recolour every light part in place (no intensity or display changes, so it's cheap per frame). */
+function tintLights(c){
+  lightMaterials.forEach(m=>{m.color.copy(c);m.emissive.copy(c)});
+  diffuserMaterials.forEach(m=>{m.emissive.copy(c)});
+  deviceLights.forEach(l=>{l.color.copy(c)});
+  ledGlows.forEach(m=>{m.material.color.copy(c)});
+  stripLights.forEach(l=>{l.color.copy(c)});
+  beamMeshes.forEach(m=>{m.material.color.copy(c)});
+  if(lightPool)lightPool.material.color.copy(c);
+}
+function stepLights(dt){
+  if (cycle.length < 2 || reduced) return;
+  cycleT += dt;
+  const per = LIGHT_HOLD + LIGHT_FADE, i = Math.floor(cycleT / per) % cycle.length, f = cycleT % per;
+  const t = f < LIGHT_HOLD ? 0 : (f - LIGHT_HOLD) / LIGHT_FADE, mix = t * t * (3 - 2 * t);
+  lightNow.copy(cycle[i]).lerp(lightNext.copy(cycle[(i + 1) % cycle.length]), mix);
+  tintLights(lightNow);
+  const showing = mix > .5 ? (i + 1) % cycle.length : i;
+  if (showing !== shownLight) { shownLight = showing; onLightChange?.(showing); }
+}
 
 let raf = 0, explode = 0, lastT = performance.now();
 function animate(){
@@ -683,6 +732,7 @@ function animate(){
   if (getFocus) { const f = getFocus(); if (f !== focusId) { focusId = f; refreshTint(); } }
   // While turning by itself, keep the hover label pinned to whatever is now under the pointer.
   if (controls.autoRotate && lastPointer && !dragging) report(lastPointer.x, lastPointer.y);
+  stepLights(dt);
   zoom.update();
   controls.update();
   renderer.render(scene, camera);

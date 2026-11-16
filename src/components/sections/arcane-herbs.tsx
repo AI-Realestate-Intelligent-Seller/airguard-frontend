@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
@@ -9,7 +10,8 @@ import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-pref
 import { arcaneHerbTeas, featuredArcaneHerbTeas } from "@/data/arcane-herb-products";
 
 /*
- * Arcane Herbs, the last section, after the Book Store. Its film (upright, light) is played by the
+ * Arcane Herbs, after King Hydrogen (its blends can be prepared with King Hydrogen water),
+ * before the Book Store. Its film (upright, light) is played by the
  * scroll the same way as the Book Store's: frames drawn as part of the section, forward with the
  * scroll, back when scrolling up, easing to rest when the scroll stops. A sachet rises through a
  * splash of water, an old photograph of a family herb shop, then the tea is poured: "Arcane Herbs,
@@ -226,13 +228,14 @@ function HerbWords({ compact = false }: { compact?: boolean }) {
           </figure>
         ))}
       </div>
-      <a
-        href="#contact"
+      <Link
+        href="/contact?product=arcane-herb"
+        data-cta="primary"
         className="group mt-7 inline-flex items-center gap-2 rounded-full bg-[#2b2620] px-5 py-2.5 text-sm font-medium text-[#f4efe6] transition-colors hover:bg-[#8a6a35] dark:bg-[#d6b679] dark:text-[#1c1a17] dark:hover:bg-white"
       >
         Ask about our {arcaneHerbTeas.length} blends
         <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
-      </a>
+      </Link>
     </div>
   );
 }

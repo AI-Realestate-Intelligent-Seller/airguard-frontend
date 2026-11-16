@@ -1,8 +1,9 @@
 "use client";
 
+import type React from "react";
 import { Plus, ShoppingCart } from "lucide-react";
 import { modelById, type ModelId } from "@/data/airguard-models";
-import { cart } from "@/lib/cart";
+import { flyToCart } from "@/lib/fly-to-cart";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,9 +22,9 @@ export function AddToCart({
   variant?: "button" | "icon";
 }) {
   const m = modelById[id];
-  const add = () => {
+  const add = (e: React.MouseEvent<HTMLButtonElement>) => {
     onAdd?.();
-    cart.add({ id: `airguard-${m.id}`, name: m.name, note: m.role, price: m.price, image: m.image.src });
+    flyToCart({ id: `airguard-${m.id}`, name: m.name, note: m.role, price: m.price, image: m.image.src }, e.currentTarget);
   };
 
   if (variant === "icon") {
@@ -31,6 +32,7 @@ export function AddToCart({
       <button
         type="button"
         onClick={add}
+        data-cta="primary"
         aria-label={`Add ${m.name} to cart`}
         title="Add to cart"
         className={cn(
@@ -48,6 +50,7 @@ export function AddToCart({
     <button
       type="button"
       onClick={add}
+      data-cta="primary"
       className={cn(
         "magnetic-cta inline-flex h-12 items-center justify-center gap-2 rounded-full bg-brand-500 px-6 text-sm font-medium text-white shadow-[0_14px_30px_-14px_rgba(64,103,177,0.8)] hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400",
         className

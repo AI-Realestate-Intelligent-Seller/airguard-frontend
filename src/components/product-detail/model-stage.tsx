@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { AnimatePresence, motion } from "motion/react";
+import { ModelSkeleton } from "@/components/three/model-skeleton";
 import type { ModelId } from "@/data/airguard-models";
 import { useIsDark } from "@/hooks/use-is-dark";
 import { useMotionPreference } from "@/hooks/use-motion-preference";
@@ -116,12 +117,8 @@ export function ModelStage({
 
       <AnimatePresence>
         {!ready && (
-          <motion.div exit={{ opacity: 0 }} className="pointer-events-none absolute inset-0 grid place-items-center">
-            {failed ? (
-              <p className="text-sm text-navy/60">The 3D view couldn&apos;t load in this browser.</p>
-            ) : (
-              <span className="size-8 animate-spin rounded-full border-2 border-navy/15 border-t-brand-500 dark:border-t-brand-300" aria-label="Loading 3D view" />
-            )}
+          <motion.div exit={{ opacity: 0 }} className="absolute inset-0">
+            <ModelSkeleton failed={failed} />
           </motion.div>
         )}
       </AnimatePresence>

@@ -280,6 +280,9 @@ export function mountBasicModel(
   camera.position.copy(target).add(new THREE.Vector3(0.62, 0.42, 0.66).normalize().multiplyScalar(dist));
 
   const controls = new OrbitControls(camera, renderer.domElement);
+  // OrbitControls sets touch-action "none" when it connects; restore pan-y so vertical swipes
+  // over the model still scroll the page on phones (horizontal drags still turn it).
+  renderer.domElement.style.touchAction = "pan-y";
   controls.target.copy(target);
   controls.enableDamping = !reducedMotion;
   controls.dampingFactor = 0.07;

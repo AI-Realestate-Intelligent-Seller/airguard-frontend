@@ -638,7 +638,9 @@ export function ProductRunway() {
           }}
           className="relative flex min-h-0 flex-col border-t border-border bg-card/60 backdrop-blur-sm lg:border-l lg:border-t-0"
         >
-          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6 pb-6 pt-8 md:px-10 lg:px-8 lg:pt-10">
+          {/* Scrolls on its own only in the desktop split layout. On phones it must not be a scroll
+              container: with overscroll-contain, a swipe starting here never reached the page. */}
+          <div className="flex min-h-0 flex-1 flex-col px-6 pb-6 pt-8 md:px-10 lg:overflow-y-auto lg:overscroll-contain lg:px-8 lg:pt-10">
             {/* popLayout: the next panel enters at once while the last one fades out over it */}
             <AnimatePresence mode="popLayout" initial={false}>
               {isAirGuard ? <ModelPanel key={model.id} index={index} /> : <BrandPanel key={brand} brand={brand} />}

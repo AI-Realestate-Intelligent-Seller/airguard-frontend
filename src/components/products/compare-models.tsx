@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 /*
  * The four models side by side (Phase 1 AirGuard Product Comparison, claims-safe wording).
  * Ticks draw themselves in row by row as the table scrolls into view; hovering or focusing a
- * column lifts that model. Phones scroll the table sideways with the feature column pinned.
+ * column lifts that model. Phones get their own view instead (MobileCompare): any two models
+ * side by side, feature by feature, with a "differences only" switch.
  */
 /** Each group's first row number, so ticks can stagger down the whole table. */
 const groupStart = compareRows.map((_, gi) => compareRows.slice(0, gi).reduce((n, g) => n + g.rows.length, 0));
@@ -31,7 +32,9 @@ export function CompareModels() {
           </h2>
         </Reveal>
 
-        <div className="relative mt-12 overflow-x-auto [scrollbar-width:thin]" onPointerLeave={() => setCol(null)}>
+        <MobileCompare />
+
+        <div className="relative mt-12 overflow-x-auto [scrollbar-width:thin] max-md:hidden" onPointerLeave={() => setCol(null)}>
           <table className="w-full min-w-[760px] border-separate border-spacing-0 text-left text-sm">
             <caption className="sr-only">AirGuard XP, MP, LT and CH compared by feature</caption>
             <thead>
@@ -100,6 +103,99 @@ export function CompareModels() {
         </p>
       </div>
     </section>
+  );
+}
+
+/** Phones: two models side by side. Each pick is a native select (the phone's own picker). */
+function MobileCompare() {
+  const [pick, setPick] = useState<[number, number]>([0, 1]);
+  const [diffOnly, setDiffOnly] = useState(false);
+  const groups = compareRows
+    .map((g) => ({ ...g, rows: g.rows.filter((r) => !diffOnly || r.cells[pick[0]] !== r.cells[pick[1]]) }))
+    .filter((g) => g.rows.length > 0);
+  let row = 0;
+
+  return (
+    <div className="mt-8 md:hidden">
+      {/* the two models, pinned under the site bar while the features scroll past */}
+      <div className="sticky top-[60px] z-10 -mx-5 border-b border-border bg-background/95 px-5 pb-3 pt-3 backdrop-blur-md">
+        <div className="grid grid-cols-2 gap-3">
+          {pick.map((ci, slot) => {
+            const m = modelById[compareColumns[ci]];
+            return (
+              <div key={slot} className="rounded-2xl border border-border bg-card p-3">
+                <div className="relative mx-auto aspect-[16/10] w-full max-w-[140px]">
+                  <Image src={m.image} alt="" fill sizes="140px" className="object-contain" />
+                </div>
+                <label className="mt-2 block">
+                  <span className="sr-only">{slot === 0 ? "First model" : "Second model"}</span>
+                  <select
+                    value={ci}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setPick((p) => {
+                        const next: [number, number] = [p[0], p[1]];
+                        // Choosing the other slot's model swaps the two.
+                        if (v === p[1 - slot]) next[1 - slot] = p[slot];
+                        next[slot] = v;
+                        return next;
+                      });
+                    }}
+                    className="h-10 w-full rounded-full border border-navy/15 bg-background px-3 text-sm font-medium text-navy focus-visible:outline-2 focus-visible:outline-brand-400"
+                  >
+                    {compareColumns.map((id, i) => (
+                      <option key={id} value={i}>
+                        {modelById[id].name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <p className="mt-1.5 text-center text-[11px] text-muted-foreground">{m.role}</p>
+              </div>
+            );
+          })}
+        </div>
+        <label className="mt-3 flex items-center justify-between gap-3 text-sm text-navy">
+          Differences only
+          <button
+            type="button"
+            role="switch"
+            aria-checked={diffOnly}
+            onClick={() => setDiffOnly((d) => !d)}
+            className="relative h-7 w-12 rounded-full bg-navy/15 transition-colors aria-checked:bg-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400"
+          >
+            <span className={cn("absolute left-1 top-1 size-5 rounded-full bg-white shadow transition-transform", diffOnly && "translate-x-5")} />
+          </button>
+        </label>
+      </div>
+
+      {groups.length === 0 && (
+        <p className="py-10 text-center text-sm text-muted-foreground">These two models match on every listed feature.</p>
+      )}
+      {groups.map((g) => (
+        <section key={g.group} aria-label={g.group} className="pt-6">
+          <h3 className="text-xs font-medium uppercase tracking-[0.08em] text-navy">{g.group}</h3>
+          <dl className="mt-2">
+            {g.rows.map((r) => {
+              const n = row++;
+              return (
+                <div key={r.label} className="border-t border-border py-3">
+                  <dt className="text-[13px] text-navy/70">{r.label}</dt>
+                  <dd className="mt-2 grid grid-cols-2 gap-3 text-center">
+                    {pick.map((ci, slot) => (
+                      <span key={slot} className="grid min-h-9 place-items-center rounded-xl bg-muted/50 px-2 py-1.5">
+                        <span className="sr-only">{modelById[compareColumns[ci]].name}: </span>
+                        <Cell value={r.cells[ci]} row={n} />
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+        </section>
+      ))}
+    </div>
   );
 }
 

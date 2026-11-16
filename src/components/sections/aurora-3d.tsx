@@ -2,16 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Hand, Minus, MousePointer2, Plus } from "lucide-react";
+import { ModelSkeleton } from "@/components/three/model-skeleton";
+import Link from "next/link";
+import { Hand, MessageSquareText, Minus, MousePointer2, Plus } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
 
 /*
- * King Hydrogen Aurora up close, next to the AirGuard XP one and built the same way: the
+ * King Hydrogen Aurora up close, the first wellness section after AirGuard XP, built like it: the
  * interactive 3D model with no control panel, every part labelled (dot, leader line, name), drag
  * to turn (it turns slowly by itself), hover a part to light up its label and read what it does.
  * Light in light mode (like the AirGuard XP section); dark mode sets it in a misty studio like the
  * Aurora's product film. A plain section: its content fades up.
+ *
+ * Four editions share the Aurora's cabinet, so one scene shows them all (aurora-scene.ts
+ * `edition`), each finished and lit as its product photo. King Guard has no product photo yet,
+ * so it isn't modelled.
  */
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -27,14 +33,93 @@ const PARTS = [
   { id: "handle", name: "Side handle", line: "Recessed flush pull." },
 ];
 
-const highlights = [
-  { k: "Etched glass jar", v: "Clear water, rising bubbles" },
-  { k: "Brass spigot", v: "Pour straight from the unit" },
-  { k: "Rotary controls", v: "M, Timer, S and Bluetooth®" },
+type EditionId = "aurora" | "founder" | "monarch" | "simplestill";
+
+/** The editions: names and notes as in the products menu; the rest describes each product photo. */
+const EDITIONS: {
+  id: EditionId;
+  /** Name in the products menu and the contact form. */
+  name: string;
+  short: string;
+  note: string;
+  copy: string;
+  /** Parts this edition doesn't have (no label for them). */
+  hidden: string[];
+  rename?: Record<string, { name: string; line: string }>;
+  highlights: { k: string; v: string }[];
+}[] = [
+  {
+    id: "aurora",
+    name: "Aurora Edition",
+    short: "Aurora",
+    note: "Illuminated glass, engraved crest",
+    copy: "Matte-black steel, an etched glass jar lit blue from above, a brass spigot and machined controls.",
+    hidden: [],
+    highlights: [
+      { k: "Etched glass jar", v: "Clear water, rising bubbles" },
+      { k: "Brass spigot", v: "Pour straight from the unit" },
+      { k: "Rotary controls", v: "M, Timer, S and Bluetooth®" },
+    ],
+  },
+  {
+    id: "founder",
+    name: "Founder Edition",
+    short: "Founder",
+    note: "The original numbered run",
+    copy: "The same matte-black cabinet and crest, with a clear etched jar and a gold spigot.",
+    hidden: [],
+    rename: { jar: { name: "Etched glass jar", line: "Clear threaded glass." }, spigot: { name: "Gold spigot", line: "Lever valve and pour spout." } },
+    highlights: [
+      { k: "Etched glass jar", v: "Clear glass, rising bubbles" },
+      { k: "Gold spigot", v: "Pour straight from the unit" },
+      { k: "Rotary controls", v: "M, Timer, S and Bluetooth®" },
+    ],
+  },
+  {
+    id: "monarch",
+    name: "The Monarch",
+    short: "Monarch",
+    note: "Full-spectrum flagship",
+    copy: "The bay becomes a column of full-spectrum light behind two honeycomb grilles, under the same controls.",
+    hidden: ["jar", "spigot"],
+    highlights: [
+      { k: "Full-spectrum bay", v: "Bars of colour behind the grilles" },
+      { k: "Honeycomb grilles", v: "Two round grilles" },
+      { k: "Rotary controls", v: "M, Timer, S and Bluetooth®" },
+    ],
+  },
+  {
+    id: "simplestill",
+    name: "SimpleStill",
+    short: "SimpleStill",
+    note: "Practical dental water distillation",
+    copy: "A brushed stainless cabinet with a plain door, a simple switch and a jar with a blue screw lid.",
+    hidden: ["dial", "buttons"],
+    rename: {
+      door: { name: "Cabinet door", line: "Plain brushed-steel door." },
+      jar: { name: "Lidded jar", line: "Clear jar with a blue screw lid." },
+      spigot: { name: "Spigot", line: "White pour spout." },
+    },
+    highlights: [
+      { k: "Stainless cabinet", v: "Brushed steel throughout" },
+      { k: "Lidded jar", v: "Blue screw lid, front spout" },
+      { k: "Simple switch", v: "One switch on the front" },
+    ],
+  },
 ];
 
 export function Aurora3D() {
   const reduceMotion = useReducedMotion();
+  const [editionId, setEditionId] = useState<EditionId>("aurora");
+  const edition = EDITIONS.find((e) => e.id === editionId)!;
+  const parts = PARTS.filter((p) => !edition.hidden.includes(p.id)).map((p) => ({ ...p, ...edition.rename?.[p.id] }));
+  const chooseEdition = (id: EditionId) => {
+    if (id === editionId) return;
+    setReady(false);
+    setFailed(false);
+    setPicked(null);
+    setEditionId(id);
+  };
   const stageRef = useRef<HTMLDivElement>(null);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const viewRef = useRef<{ zoomIn: () => void; zoomOut: () => void; highlight: (id: string | null) => void } | null>(null);
@@ -59,6 +144,7 @@ export function Aurora3D() {
             getLabel: (id) => labelRefs.current[id] ?? null,
             reducedMotion: reduceMotion,
             onPick: setPicked,
+            edition: editionId,
           });
           viewRef.current = cleanup;
           setReady(true);
@@ -76,7 +162,7 @@ export function Aurora3D() {
       viewRef.current = null;
       cleanup?.();
     };
-  }, [reduceMotion]);
+  }, [reduceMotion, editionId]);
 
   const rise = (delay = 0) =>
     reduceMotion
@@ -109,20 +195,45 @@ export function Aurora3D() {
             <span aria-hidden="true" className="h-px w-12 bg-brand-500/60 dark:bg-[#6f9bff]/60" />
           </p>
           <h2 id="aurora-3d-title" className="mt-4 text-4xl font-medium leading-[1.05] tracking-tight text-navy md:text-5xl dark:text-white">
-            A closer look at the <span className="font-bold text-brand-500 dark:text-[#6f9bff]">Aurora</span>
+            A closer look at the <span className="font-bold text-brand-500 dark:text-[#6f9bff]">{edition.short}</span>
           </h2>
           <p className="mt-5 text-base leading-[1.75] text-navy/70 dark:text-white/70">
-            Matte-black steel, an etched glass jar lit blue from above, a brass spigot and machined controls.
-            Turn it round and find each part.
+            {edition.copy} Turn it round and find each part.
           </p>
+
+          {/* Editions: one cabinet, four finishes */}
+          <div role="tablist" aria-label="King Hydrogen editions" className="-mx-1 mt-6 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none]">
+            {EDITIONS.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                role="tab"
+                aria-selected={e.id === editionId}
+                aria-controls="aurora-stage"
+                onClick={() => chooseEdition(e.id)}
+                className="shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors border-navy/15 bg-white/60 text-navy hover:border-brand-500 aria-selected:border-brand-500 aria-selected:bg-brand-500 aria-selected:text-white dark:border-white/15 dark:bg-white/5 dark:text-white/85 dark:aria-selected:border-[#4f86ff] dark:aria-selected:bg-[#2557f2]"
+              >
+                {e.short}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-navy/55 dark:text-white/55">{edition.name} · {edition.note}</p>
           <dl className="mt-7 divide-y divide-navy/10 border-y border-navy/10 dark:divide-white/10 dark:border-white/10">
-            {highlights.map((h) => (
+            {edition.highlights.map((h) => (
               <div key={h.k} className="flex items-baseline justify-between gap-4 py-3">
                 <dt className="text-sm font-semibold text-navy dark:text-white">{h.k}</dt>
                 <dd className="text-right text-sm text-navy/60 dark:text-white/60">{h.v}</dd>
               </div>
             ))}
           </dl>
+          <Link
+            href={`/contact?product=king-hydrogen&type=${encodeURIComponent(edition.name)}`}
+            data-cta="primary"
+            className="mt-7 inline-flex h-12 items-center justify-center gap-2 rounded-full bg-brand-500 px-6 text-sm font-medium text-white shadow-[0_14px_30px_-14px_rgba(64,103,177,0.8)] hover:bg-brand-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 max-sm:w-full dark:bg-[#2557f2]"
+          >
+            <MessageSquareText className="size-4" aria-hidden="true" />
+            Enquire about the {edition.short}
+          </Link>
         </motion.div>
 
         {/* ── The model, with every part labelled ── */}
@@ -133,14 +244,15 @@ export function Aurora3D() {
         >
           <div
             ref={stageRef}
+            id="aurora-stage"
             role="img"
-            aria-label="Interactive 3D model of the King Hydrogen Aurora, labelled: etched glass jar, brass spigot, rotary dial, power and start/stop buttons, cooling louvers, exhaust fan, crest cabinet door, side handle. Drag to turn it."
+            aria-label={`Interactive 3D model of the King Hydrogen ${edition.name}, labelled: ${parts.map((p) => p.name.toLowerCase()).join(", ")}. Drag to turn it. Illustrative model.`}
             className="absolute inset-0"
           />
 
           {/* Part labels: positioned every frame by the scene (CSS variables), hidden until it runs */}
           <div aria-hidden="true" className={`pointer-events-none absolute inset-0 transition-opacity duration-500 ${ready ? "opacity-100" : "opacity-0"}`}>
-            {PARTS.map((p, i) => (
+            {parts.map((p, i) => (
               <div
                 key={p.id}
                 ref={(el) => {
@@ -165,16 +277,11 @@ export function Aurora3D() {
             ))}
           </div>
 
-          {/* Loading / fallback */}
+          {/* Loading skeleton / fallback */}
           <AnimatePresence>
             {!ready && (
-              <motion.div
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="pointer-events-none absolute inset-0 grid place-items-center"
-              >
-                <p className="text-sm text-navy/50 dark:text-white/50">{failed ? "The 3D view couldn't load in this browser." : "Preparing the 3D view…"}</p>
+              <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="absolute inset-0">
+                <ModelSkeleton failed={failed} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -224,7 +331,7 @@ export function Aurora3D() {
 
         {/* Phones: the parts by number; tap one to light it on the model */}
         <ol aria-label="Parts" className="grid grid-cols-2 gap-2 sm:hidden">
-          {PARTS.map((p, i) => (
+          {parts.map((p, i) => (
             <li key={p.id}>
               <button
                 type="button"

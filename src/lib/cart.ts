@@ -61,13 +61,14 @@ function subscribe(l: () => void) {
 }
 
 export const cart = {
-  add(item: Omit<CartItem, "qty">, qty = 1) {
+  /** Adds an item; the drawer opens unless `open: false` (flyToCart opens it once the item lands). */
+  add(item: Omit<CartItem, "qty">, qty = 1, { open = true }: { open?: boolean } = {}) {
     load();
     const existing = state.items.find((i) => i.id === item.id);
     const items = existing
       ? state.items.map((i) => (i.id === item.id ? { ...i, ...item, qty: i.qty + qty } : i))
       : [...state.items, { ...item, qty }];
-    set({ items, open: true });
+    set({ items, open: open || state.open });
   },
   setQty(id: string, qty: number) {
     set({ items: qty > 0 ? state.items.map((i) => (i.id === id ? { ...i, qty } : i)) : state.items.filter((i) => i.id !== id) });

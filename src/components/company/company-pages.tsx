@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -473,8 +473,35 @@ export function ContactPage() {
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState("");
   const [topic, setTopic] = useState("Dentistry & Product questions");
-  const [productId, setProductId] = useState("");
-  const product = contactProducts.find((p) => p.id === productId);
+  // Any number of products, and any number of types within each (none = the whole range).
+  const [productIds, setProductIds] = useState<string[]>([]);
+  const [types, setTypes] = useState<Record<string, string[]>>({});
+  const [productError, setProductError] = useState(false);
+  const chosen = contactProducts.filter((p) => productIds.includes(p.id));
+
+  const toggleProduct = (id: string) => {
+    setProductError(false);
+    setProductIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  };
+  const toggleType = (id: string, t: string) =>
+    setTypes((all) => {
+      const list = all[id] ?? [];
+      return { ...all, [id]: list.includes(t) ? list.filter((x) => x !== t) : [...list, t] };
+    });
+
+  // Quick CTAs across the site link here as /contact?product=airguard&type=AirGuard%20XP:
+  // start the form with that product (and type, if it's one of the product's) already chosen.
+  useEffect(() => {
+    const read = () => {
+      const q = new URLSearchParams(window.location.search);
+      const preset = contactProducts.find((p) => p.id === q.get("product"));
+      if (!preset) return;
+      setProductIds([preset.id]);
+      const type = q.get("type") ?? "";
+      if (preset.types.includes(type)) setTypes({ [preset.id]: [type] });
+    };
+    read();
+  }, []);
 
   async function copyEmail() {
     try {
@@ -488,14 +515,28 @@ export function ContactPage() {
 
   function prepareEmail(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (chosen.length === 0) {
+      setProductError(true);
+      document.getElementById("contact-products")?.scrollIntoView({ block: "center", behavior: "smooth" });
+      return;
+    }
     const data = new FormData(e.currentTarget);
-    const productLine = product ? `${product.label}${data.get("productType") ? ` — ${data.get("productType")}` : ""}` : "Not provided";
+    const productLines = chosen
+      .map((p) => {
+        const picked = types[p.id] ?? [];
+        const detail = p.types.length ? (picked.length ? picked.join(", ") : ANY_TYPE) : "";
+        return `- ${p.label}${detail ? `: ${detail}` : ""}`;
+      })
+      .join("\n");
     const body = `Name: ${data.get("name")}\nEmail: ${data.get("email")}\nPractice: ${
       data.get("practice") || "Not provided"
-    }\nProduct: ${productLine}\n\n${data.get("message")}`;
-    window.location.href = `mailto:info@airguardhealth.com?subject=${encodeURIComponent(
-      `AirGuard inquiry — ${topic}${product && product.id !== "general" ? ` · ${product.label}` : ""}`
-    )}&body=${encodeURIComponent(body)}`;
+    }\nProducts:\n${productLines}\n\n${data.get("message")}`;
+    const named = chosen.filter((p) => p.id !== "general").map((p) => p.label);
+    window.location.assign(
+      `mailto:info@airguardhealth.com?subject=${encodeURIComponent(
+        `AirGuard inquiry — ${topic}${named.length ? ` · ${named.join(", ")}` : ""}`
+      )}&body=${encodeURIComponent(body)}`
+    );
     setStatus(
       "Your email draft is ready in your email app. Review it and send it there. If no app opened, email info@airguardhealth.com directly."
     );
@@ -631,48 +672,46 @@ export function ContactPage() {
                   maxLength={150}
                 />
               </label>
-              {/* Which product, then which model / blend / title (the type list follows the product) */}
-              <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                <label>
-                  Product
-                  <select
-                    name="product"
-                    required
-                    value={productId}
-                    onChange={(e) => setProductId(e.target.value)}
-                  >
-                    <option value="" disabled>
-                      Select a product
-                    </option>
-                    {contactProducts.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Type
-                  <select
-                    // Remount per product so the choice resets when the product changes
-                    key={productId}
-                    name="productType"
-                    required={!!product?.types.length}
-                    disabled={!product?.types.length}
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      {!product ? "Select a product first" : product.types.length ? "Select a type" : "No type needed"}
-                    </option>
-                    {product && product.types.length > 0 && <option value={ANY_TYPE}>{ANY_TYPE}</option>}
-                    {product?.types.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              {/* Products (any number), then the types within each chosen product (any number) */}
+              <div id="contact-products" className="mt-5">
+                <p id="contact-products-label" className="text-[13px] text-[#425865] dark:text-[#c5d2ea]">
+                  Products <span className="text-[#7a8f99]">· choose all that apply</span>
+                </p>
+                <div role="group" aria-labelledby="contact-products-label" className="mt-2.5 flex flex-wrap gap-2">
+                  {contactProducts.map((p) => (
+                    <Chip key={p.id} on={productIds.includes(p.id)} onClick={() => toggleProduct(p.id)}>
+                      {p.label}
+                    </Chip>
+                  ))}
+                </div>
+                {productError && (
+                  <p role="alert" className="mt-2 text-xs text-[#b42318] dark:text-[#ff8a80]">
+                    Choose at least one product.
+                  </p>
+                )}
               </div>
+
+              {chosen
+                .filter((p) => p.types.length > 0)
+                .map((p) => {
+                  const picked = types[p.id] ?? [];
+                  const labelId = `contact-types-${p.id}`;
+                  return (
+                    <div key={p.id} className="mt-5 rounded-xl border border-[#d8e1e5] bg-[#fafcfc] p-4 dark:border-[#8fb3ef33] dark:bg-[#0f1a2e]">
+                      <p id={labelId} className="text-[13px] text-[#425865] dark:text-[#c5d2ea]">
+                        {p.label} <span className="text-[#7a8f99]">· {picked.length ? `${picked.length} selected` : "whole range, or choose"}</span>
+                      </p>
+                      <div role="group" aria-labelledby={labelId} className="mt-2.5 flex max-h-56 flex-wrap gap-2 overflow-y-auto">
+                        {p.types.map((t) => (
+                          <Chip key={t} small on={picked.includes(t)} onClick={() => toggleType(p.id, t)}>
+                            {t}
+                          </Chip>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
               <label className="mt-5 block">
                 How can we help?
                 <textarea name="message" rows={5} required maxLength={3000} />
@@ -690,5 +729,26 @@ export function ContactPage() {
       </section>
       <Associates />
     </>
+  );
+}
+
+/** A toggle chip for the contact form's multi-select lists. */
+function Chip({ on, onClick, small, children }: { on: boolean; onClick: () => void; small?: boolean; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={onClick}
+      className={`inline-flex items-center gap-1.5 rounded-full border text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a929c] ${
+        small ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm"
+      } ${
+        on
+          ? "border-brand-500 bg-brand-500 text-white"
+          : "border-[#d8e1e5] bg-white text-[#152e43] hover:border-brand-500 dark:border-[#8fb3ef33] dark:bg-[#0f1a2e] dark:text-[#eef2fa]"
+      }`}
+    >
+      {on && <Check size={14} aria-hidden="true" />}
+      {children}
+    </button>
   );
 }

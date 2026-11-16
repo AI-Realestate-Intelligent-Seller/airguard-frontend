@@ -5,6 +5,7 @@ import { Footer } from "@/components/layout/footer";
 import { ScrollProgress } from "@/components/motion/scroll-progress";
 import { IntroLoader } from "@/components/motion/intro-loader";
 import { CartDrawer } from "@/components/cart/cart-drawer";
+import { MobileQuickBar } from "@/components/layout/mobile-quick-bar";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -49,6 +50,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <main tabIndex={-1} className="flex-1 outline-none">{children}</main>
           <Footer />
         </IntroLoader>
+        {/* Phones: buy / ask / call, always one tap away */}
+        <MobileQuickBar />
         <CartDrawer />
       </body>
     </html>

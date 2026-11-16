@@ -515,8 +515,8 @@ export function FamilyStory() {
           aria-labelledby="journey-title"
           className="grid overflow-hidden p-0 md:p-0 lg:h-full lg:grid-cols-[0.7fr_1fr] lg:py-0"
         >
-          {/* ── Left: the founder, full height, with the story over the photo ── */}
-          <div className="relative isolate flex min-h-[92svh] flex-col justify-end overflow-hidden bg-[linear-gradient(180deg,#0a1e3c_0%,#061224_60%)] text-white lg:min-h-0">
+          {/* ── Left: the founder, full height, with the story over the photo (phones: after the cards) ── */}
+          <div className="relative isolate flex min-h-[92svh] flex-col justify-end overflow-hidden bg-[linear-gradient(180deg,#0a1e3c_0%,#061224_60%)] text-white max-lg:order-2 lg:min-h-0">
             {/* Dr. James in the operatory, across the top below the 72px navbar, fading into the navy */}
             <motion.div
               className="absolute inset-x-0 top-[72px] -z-10 aspect-[695/340] overflow-hidden lg:aspect-auto lg:h-[48%]"

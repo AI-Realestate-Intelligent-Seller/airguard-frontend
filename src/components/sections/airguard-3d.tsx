@@ -2,8 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Hand, Minus, MousePointer2, Plus } from "lucide-react";
+import { ModelSkeleton } from "@/components/three/model-skeleton";
+import Link from "next/link";
+import { ArrowRight, Hand, MessageSquareText, Minus, MousePointer2, Plus } from "lucide-react";
 import { Section } from "@/components/layout/section";
+import { AddToCart } from "@/components/cart/add-to-cart";
+import { techTabs } from "@/data/airguard-technology";
+import { useIsDark } from "@/hooks/use-is-dark";
+import { setXpLight } from "@/lib/xp-light";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
 
 /*
@@ -27,6 +33,17 @@ const PARTS = [
   { id: "buttons", name: "Physical buttons", line: "Two front control banks." },
 ];
 
+/** The four LED colours, from airguardhealth.com/technology (the lighting tab's swatches). */
+const LEDS = techTabs.find((t) => t.id === "lighting")?.swatches ?? [];
+/** "Get a quote" opens the contact form with the XP already chosen. */
+export const XP_QUOTE_HREF = `/contact?product=airguard&type=${encodeURIComponent("AirGuard XP")}`;
+
+type SceneApi = {
+  zoomIn: () => void;
+  zoomOut: () => void;
+  highlight: (id: string | null) => void;
+};
+
 const highlights = [
   { k: "Clear barrier", v: "Shield above the treatment area" },
   { k: "Extra-oral suction", v: "Fits your existing vacuum" },
@@ -35,9 +52,13 @@ const highlights = [
 
 export function AirGuard3D() {
   const reduceMotion = useReducedMotion();
+  // Same studio as the XP detail page: light, or blue rim lights on a dark stage in dark mode.
+  const dark = useIsDark();
+  // The lights cycle through the four LED colours on their own; this names the one showing.
+  const [led, setLed] = useState(0);
   const stageRef = useRef<HTMLDivElement>(null);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const viewRef = useRef<{ zoomIn: () => void; zoomOut: () => void; highlight: (id: string | null) => void } | null>(null);
+  const viewRef = useRef<SceneApi | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -46,7 +67,7 @@ export function AirGuard3D() {
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    let cleanup: ((() => void) & { zoomIn: () => void; zoomOut: () => void; highlight: (id: string | null) => void }) | undefined;
+    let cleanup: ((() => void) & SceneApi) | undefined;
     let cancelled = false;
     const io = new IntersectionObserver(
       async ([e]) => {
@@ -60,8 +81,16 @@ export function AirGuard3D() {
             reducedMotion: reduceMotion,
             onPick: setPicked,
             numberedDots: true,
+            theme: dark ? "dark" : "light",
+            showLights: true,
+            lightCycle: LEDS.map((l) => l.hex),
+            onLightChange: (i: number) => {
+              setLed(i);
+              if (LEDS[i]) setXpLight(LEDS[i].hex);
+            },
           });
           viewRef.current = cleanup;
+
           setReady(true);
         } catch (err) {
           console.error("AirGuard 3D view failed to load", err);
@@ -77,7 +106,8 @@ export function AirGuard3D() {
       viewRef.current = null;
       cleanup?.();
     };
-  }, [reduceMotion]);
+  }, [reduceMotion, dark]);
+
 
   const rise = (delay = 0) =>
     reduceMotion
@@ -117,6 +147,25 @@ export function AirGuard3D() {
               </div>
             ))}
           </dl>
+          {/* Ways in: buy, ask, or read the full page. Two equal buttons on phones, thumb-sized. */}
+          <div className="mt-7 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center">
+            <AddToCart id="xp" className="w-full sm:w-auto" />
+            <Link
+              href={XP_QUOTE_HREF}
+              data-cta=""
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-navy/15 bg-white/70 px-5 text-sm font-medium text-navy backdrop-blur-sm transition-colors hover:border-brand-500 hover:text-brand-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-400 dark:border-white/15 dark:bg-white/5 dark:text-white"
+            >
+              <MessageSquareText className="size-4" aria-hidden="true" />
+              Get a quote
+            </Link>
+            <Link
+              href="/products/xp"
+              className="group col-span-2 inline-flex items-center gap-1.5 text-sm font-medium text-brand-500 hover:text-brand-600 sm:col-span-1 sm:ml-1 dark:text-brand-300"
+            >
+              See XP details
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </Link>
+          </div>
         </motion.div>
 
         {/* ── The model, with every part labelled ── */}
@@ -161,19 +210,28 @@ export function AirGuard3D() {
             ))}
           </div>
 
-          {/* Loading / fallback */}
+          {/* Loading skeleton / fallback */}
           <AnimatePresence>
             {!ready && (
-              <motion.div
-                initial={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="pointer-events-none absolute inset-0 grid place-items-center"
-              >
-                <p className="text-sm text-navy/50">{failed ? "The 3D view couldn't load in this browser." : "Preparing the 3D view…"}</p>
+              <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="absolute inset-0">
+                <ModelSkeleton failed={failed} />
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* LED colour now showing (the model cycles through all four on its own) */}
+          {ready && LEDS[led] && (
+            <div className="pointer-events-none absolute left-2 top-2 z-10 flex items-center gap-2.5 rounded-full border border-white/80 bg-white/70 py-2 pl-2.5 pr-3.5 backdrop-blur-md dark:border-white/15 dark:bg-white/5">
+              <span
+                aria-hidden="true"
+                className="size-3 rounded-full ring-1 ring-navy/15 transition-[background-color,box-shadow] duration-700 dark:ring-white/25"
+                style={{ background: LEDS[led].hex, boxShadow: `0 0 10px 1px ${LEDS[led].hex}` }}
+              />
+              <span className="text-[11px] font-medium text-navy/75 dark:text-white/80">
+                {LEDS[led].name} <span className="text-navy/45 dark:text-white/50">· {LEDS[led].value}</span>
+              </span>
+            </div>
+          )}
 
           {/* Zoom in / out */}
           {ready && (
@@ -342,13 +400,8 @@ export function AirGuardStage({ variant = "xp" }: { variant?: "xp" | "mp" }) {
       {/* Loading / fallback */}
       <AnimatePresence>
         {!ready && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="pointer-events-none absolute inset-0 grid place-items-center"
-          >
-            <p className="text-sm text-navy/50">{failed ? "The 3D view couldn't load in this browser." : "Preparing the 3D view…"}</p>
+          <motion.div initial={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }} className="absolute inset-0">
+            <ModelSkeleton failed={failed} />
           </motion.div>
         )}
       </AnimatePresence>

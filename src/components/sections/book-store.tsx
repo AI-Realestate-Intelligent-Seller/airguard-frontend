@@ -9,7 +9,7 @@ import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-pref
 import { BOOK_STORE_URL, storeBooks } from "@/data/book-store";
 
 /*
- * The Book Store, straight after the Aurora. Two parts:
+ * The Book Store, after Arcane Herbs (the wellness pair), before Get in touch. Two parts:
  *  1. The Throne and Liberty, played by the scroll. Not a video player: the film's frames are drawn
  *     edge to edge as part of the section while it holds the screen. Scrolling moves it forward,
  *     scrolling back rewinds, and when the scroll stops it eases to rest (neighbouring frames are

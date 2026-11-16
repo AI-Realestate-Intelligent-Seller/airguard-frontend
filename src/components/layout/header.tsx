@@ -111,6 +111,7 @@ export function Header() {
             type="button"
             aria-label={count ? `Cart, ${count} item${count === 1 ? "" : "s"}` : "Cart"}
             onClick={cart.open}
+            data-cart-target
             className="relative inline-flex rounded-md p-2 text-navy/80 transition-colors hover:bg-brand-50 hover:text-brand-500"
           >
             <ShoppingCart className="size-5" />

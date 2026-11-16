@@ -18,12 +18,15 @@ export function mountAurora(
     getLabel,
     reducedMotion = false,
     onPick,
+    edition = "aurora",
   }: {
     /** The page's label element for each part; the scene keeps it pinned to its part. */
     getLabel?: (id: string) => HTMLElement | null;
     reducedMotion?: boolean;
     /** A part was tapped or clicked (or tapped again to clear): its id, or null. */
     onPick?: (id: string | null) => void;
+    /** Which King Hydrogen edition to show: the same cabinet, finished and lit as its product photo. */
+    edition?: "aurora" | "founder" | "monarch" | "simplestill";
   } = {}
 ) {
 const reduced = reducedMotion;
@@ -1137,6 +1140,63 @@ scene.add(rimLight);
 overheadUVLight.intensity = 4.2 * L * 1.7;
 bubblesGroup.visible = true;
 
+// ── Editions. The prototype is the Aurora; the other editions share its cabinet and differ in
+// finish and lighting, as their product photos show (illustrative, not engineering drawings):
+//   Founder      the same black cabinet with a clear, unlit jar
+//   Monarch      no jar: the bay holds full-spectrum light bars, two honeycomb grilles and a lit pad
+//   SimpleStill  brushed stainless cabinet, plain door, simple switch, jar with a blue lid ──
+function clearJar() {
+  overheadUVLight.intensity = 0;
+  hydrogenWaterMat.vertexColors = false; hydrogenWaterMat.color.set(0xe8eef4); hydrogenWaterMat.opacity = 0.05; hydrogenWaterMat.needsUpdate = true;
+  meniscusMat.color.set(0xcfd8e2); meniscusMat.opacity = 0.12;
+  for (const m of [rimBlueMat, threadBlueMat, baseBlueMat]) m.color.set(0xdfe6ee);
+  bottomReturn.visible = false; leftReturn.visible = false;
+}
+if (edition === "founder") {
+  clearJar(); // bubbles stay: it still makes hydrogen water, just without the bay light
+  champagneChromeSpigotMat.color.set(0xb8862e); champagneChromeSpigotMat.metalness = 0.9; champagneChromeSpigotMat.roughness = 0.22;
+}
+if (edition === "monarch") {
+  dispenserGroup.visible = false;
+  const bay = new THREE.Group(); bay.name = 'Monarch_Full_Spectrum_Bay'; productRoot.add(bay);
+  const backZ = -D / 2 + 0.05, barTop = 0.18 + lowerH - 0.12, barBottom = 0.34;
+  const bars = 11;
+  for (let i = 0; i < bars; i++) {
+    const t = i / (bars - 1);
+    // purple at the edges, teal at the centre, as in the photo
+    const c = new THREE.Color().setHSL(0.78 - 0.3 * (1 - Math.abs(t - 0.5) * 2), 0.85, 0.6);
+    const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.018, barTop - barBottom),
+      new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.9, toneMapped: false }));
+    bar.position.set(bayCenterX - bayW * 0.36 + t * bayW * 0.72, (barTop + barBottom) / 2, backZ);
+    bay.add(bar);
+  }
+  // two round honeycomb grilles over the bars
+  const hex = document.createElement('canvas'); hex.width = hex.height = 256;
+  const hx = hex.getContext('2d'); hx.fillStyle = '#0c0d10'; hx.beginPath(); hx.arc(128, 128, 126, 0, Math.PI * 2); hx.fill();
+  hx.globalCompositeOperation = 'destination-out';
+  for (let y = 14; y < 250; y += 17) for (let x = 12 + ((y / 17) % 2) * 9; x < 250; x += 18) { if (Math.hypot(x - 128, y - 128) < 112) { hx.beginPath(); for (let k = 0; k < 6; k++) { const a = Math.PI / 3 * k + Math.PI / 6; hx.lineTo(x + Math.cos(a) * 7, y + Math.sin(a) * 7); } hx.fill(); } }
+  const hexTex = new THREE.CanvasTexture(hex); hexTex.colorSpace = THREE.SRGBColorSpace;
+  for (const y of [0.18 + lowerH * 0.72, 0.18 + lowerH * 0.36]) {
+    const grille = new THREE.Mesh(new THREE.CircleGeometry(0.3, 48), new THREE.MeshStandardMaterial({ map: hexTex, transparent: true, metalness: 0.6, roughness: 0.45, alphaTest: 0.05 }));
+    grille.position.set(bayCenterX, y, backZ + 0.02); bay.add(grille);
+  }
+  const pad = new THREE.Mesh(new THREE.CircleGeometry(0.42, 48), new THREE.MeshBasicMaterial({ color: 0xf4f0ff, toneMapped: false }));
+  pad.scale.set(1, 0.32, 1); pad.rotation.x = -Math.PI / 2; pad.position.set(bayCenterX, 0.2, 0.05); bay.add(pad);
+  const spill = new THREE.PointLight(0x7f6bff, 2.4 * Math.PI, 2.4, 2); spill.position.set(bayCenterX, 1.1, -0.2); bay.add(spill);
+}
+if (edition === "simplestill") {
+  clearJar();
+  bubblesGroup.visible = false;
+  for (const m of [exteriorSteelMat, innerBayWallMat]) { m.color.set(0x9ea3a8); m.metalness = 0.85; m.roughness = 0.36; m.envMapIntensity = 0.9; m.bumpScale = 0.0002; }
+  doorMesh.material[4] = exteriorSteelMat; // a plain steel door, no crest
+  ctrlPanelGroup.visible = false;
+  const sw = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.16, 0.03), new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.5 }));
+  sw.position.set(W / 2 - 0.42, 0.18 + lowerH + upperH * 0.45, D / 2 + 0.01); productRoot.add(sw);
+  const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.13, 48), new THREE.MeshStandardMaterial({ color: 0x2747b8, roughness: 0.4 }));
+  lid.position.set(0, 0.075 + jarBodyH + jarNeckH + 0.02, 0); dispenserGroup.add(lid);
+  champagneChromeSpigotMat.color.set(0xf4f4f2); champagneChromeSpigotMat.metalness = 0; champagneChromeSpigotMat.roughness = 0.55;
+}
+
 // ── Parts: every labelled part, by the prototype's own groups. ──
 const partGroups = {
   jar: dispenserGroup,
@@ -1158,7 +1218,8 @@ for (const [id, g] of Object.entries(partGroups)) {
 }
 spigotGroup.traverse(o => { if (o.isMesh) o.userData.partId = "spigot"; });
 buttonMeshes.forEach(m => { m.userData.partId = "buttons"; });
-productRoot.traverse(o => {
+// Visible parts only: an edition's hidden jar or panel must not catch the pointer.
+productRoot.traverseVisible(o => {
   if (!o.isMesh || bubblesGroup.children.includes(o) || o === etchingPlane) return;
   selectable.push(o);
   // Each labelled part gets its own materials, so its hover tint stays on that part alone.
