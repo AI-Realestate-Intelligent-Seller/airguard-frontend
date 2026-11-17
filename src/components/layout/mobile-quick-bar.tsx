@@ -59,7 +59,14 @@ const HOME: Record<string, Context | null> = {
     primary: { label: "Enquire", href: quote("king-hydrogen"), icon: "ask" },
     secondary: call,
   },
-  // King Hydrogen → Arcane Herb bridge
+  // the particle story before King Hydrogen
+  genesis: {
+    title: "King Hydrogen",
+    note: "Hydrogen water",
+    primary: { label: "Enquire", href: quote("king-hydrogen"), icon: "ask" },
+    secondary: call,
+  },
+  // King Hydrogen → Arcane Herb story
   relay: {
     title: "Better together",
     note: "King Hydrogen · Arcane Herb",

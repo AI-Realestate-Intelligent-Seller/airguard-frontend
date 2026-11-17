@@ -4,7 +4,7 @@ import { useEffect, useRef, type MouseEvent, type PointerEvent } from "react";
 import type { MotionValue } from "motion/react";
 import Image from "next/image";
 import Link from "next/link";
-import { ringCards, type RingCard } from "@/data/hero-ring";
+import { ringBrandLabel, ringCards, type RingCard } from "@/data/hero-ring";
 import { cn } from "@/lib/utils";
 import { UNCOIL_SPEED, pathAt, railX, uncoilPath } from "@/lib/uncoil-path";
 
@@ -53,82 +53,55 @@ const smooth = (t: number) => {
 };
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-function Card({ card }: { card: RingCard }) {
-  const img = (cls: string) => (
-    <Image src={card.src} alt="" fill sizes="180px" loading="eager" draggable={false} className={cls} />
-  );
+/** Each brand's accent and studio surface. */
+const BRAND_STYLE: Record<RingCard["brand"], { surface: string; accent: string; ink: string; floor: string }> = {
+  airguard: { surface: "linear-gradient(172deg,#ffffff 0%,#f3f6fb 55%,#dfe7f4 100%)", accent: "#4067b1", ink: "#172236", floor: "#1f3a6e" },
+  "king-hydrogen": { surface: "linear-gradient(172deg,#ffffff 0%,#f4f5f8 55%,#e1e4ec 100%)", accent: "#a8873e", ink: "#141821", floor: "#0d1119" },
+  "arcane-herb": { surface: "linear-gradient(172deg,#fdfbf6 0%,#f5f0e4 55%,#e8dcc4 100%)", accent: "#8a6a35", ink: "#2d2213", floor: "#4a3518" },
+  books: { surface: "linear-gradient(172deg,#ffffff 0%,#f3f5f9 55%,#e2e7f0 100%)", accent: "#4067b1", ink: "#172236", floor: "#172236" },
+};
 
-  switch (card.variant) {
-    case "product":
-      return (
-        <>
-          <div className="absolute inset-0 bg-[linear-gradient(170deg,#ffffff_0%,#f0f3f9_45%,#c2cee6_100%)]" />
-          <div className="absolute inset-x-0 top-0 px-3.5 pt-4">
-            <p className="text-[8px] font-medium uppercase tracking-[0.2em] text-brand-500">{card.kicker}</p>
-            <p className="mt-1.5 text-[15px] font-bold leading-tight text-navy">{card.title}</p>
-          </div>
-          <div className="absolute inset-x-1 top-[96px] bottom-[52px] drop-shadow-[0_14px_14px_rgba(23,34,54,0.22)]">
-            {img("object-contain")}
-          </div>
-          <span className="absolute bottom-4 left-3.5 rounded-full bg-brand-500 px-3 py-1.5 text-[8px] font-medium tracking-wide text-white">
-            Learn more →
-          </span>
-        </>
-      );
-    case "brand":
-      return (
-        <>
-          <div className="absolute inset-0 bg-[linear-gradient(165deg,#4067b1_0%,#385998_50%,#1f304f_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 top-[150px] opacity-60 mix-blend-luminosity">
-            {img("object-cover")}
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,#4067b1_0%,transparent_45%)]" />
-          </div>
-          <div className="absolute inset-x-0 top-0 px-3.5 pt-4">
-            <p className="flex items-center gap-1.5 text-[8px] font-medium uppercase tracking-[0.2em] text-[#b1e5dc]">
-              <span className="size-1 rounded-full bg-[#b1e5dc]" />
-              {card.kicker}
-            </p>
-            <p className="mt-3 text-[22px] font-bold leading-[1.05] tracking-tight text-white">{card.title}</p>
-          </div>
-        </>
-      );
-    case "night":
-      return (
-        <>
-          <div className="absolute inset-0 bg-[radial-gradient(120%_70%_at_50%_75%,#10306b_0%,#0d1b3a_45%,#05070f_100%)]" />
-          <div className="absolute inset-x-2 top-[78px] bottom-3">{img("object-contain")}</div>
-          <div className="absolute inset-x-0 top-0 px-3.5 pt-4">
-            <p className="text-[8px] font-medium uppercase tracking-[0.2em] text-[#5ec8ff]">{card.kicker}</p>
-            <p className="mt-1.5 font-serif text-[20px] italic leading-tight text-white">{card.title}</p>
-          </div>
-        </>
-      );
-    case "cover":
-      return (
-        <>
-          <div className="absolute inset-0 bg-[linear-gradient(170deg,#f6efe2_0%,#e7d6b8_100%)]" />
-          <div className="absolute inset-x-0 top-0 px-3.5 pt-4">
-            <p className="text-[8px] font-medium uppercase tracking-[0.2em] text-[#8a6a35]">{card.kicker}</p>
-            <p className="mt-1.5 font-serif text-[19px] italic leading-tight text-[#33240f]">{card.title}</p>
-          </div>
-          <div className="absolute inset-x-5 top-[92px] bottom-5 drop-shadow-[0_16px_14px_rgba(51,36,15,0.35)]">
-            {img("object-contain")}
-          </div>
-        </>
-      );
-    case "photo":
-    default:
-      return (
-        <>
-          {img("object-cover")}
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(23,34,54,0)_35%,rgba(23,34,54,0.55)_58%,rgba(17,26,40,0.95)_82%)]" />
-          <div className="absolute inset-x-0 bottom-0 px-3.5 pb-4">
-            <p className="text-[8px] font-medium uppercase tracking-[0.2em] text-[#b1e5dc]">{card.kicker}</p>
-            <p className="mt-1.5 text-[15px] font-bold leading-tight text-white">{card.title}</p>
-          </div>
-        </>
-      );
-  }
+function Card({ card }: { card: RingCard }) {
+  const st = BRAND_STYLE[card.brand];
+  const book = card.brand === "books";
+  return (
+    <>
+      <div className="absolute inset-0" style={{ background: st.surface }} />
+      <div className="absolute inset-x-0 top-0 px-3.5 pt-3.5">
+        <p className="flex items-center gap-1.5 text-[8px] font-medium uppercase tracking-[0.14em]" style={{ color: st.accent }}>
+          <span className="h-px w-3" style={{ background: st.accent }} />
+          {ringBrandLabel[card.brand]}
+        </p>
+        <p className="mt-1.5 text-[15px] font-semibold leading-tight" style={{ color: st.ink }}>
+          {card.title}
+        </p>
+        <p className="mt-0.5 text-[9.5px] leading-snug" style={{ color: `${st.ink}99` }}>
+          {card.note}
+        </p>
+      </div>
+      {/* the product, standing on a soft floor shadow (white photo backgrounds melt into the surface) */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-[30px] left-1/2 h-3 w-[62%] -translate-x-1/2 rounded-[50%] opacity-25 blur-md"
+        style={{ background: st.floor }}
+      />
+      <div className={book ? "absolute inset-x-8 top-[88px] bottom-[34px]" : "absolute inset-x-3 top-[92px] bottom-[30px]"}>
+        <Image
+          src={card.src}
+          alt=""
+          fill
+          sizes="200px"
+          quality={90}
+          loading="eager"
+          draggable={false}
+          className={book ? "rounded-[3px] object-contain shadow-[0_12px_20px_-8px_rgba(23,34,54,0.55)]" : "object-contain mix-blend-multiply"}
+        />
+      </div>
+      <p className="absolute bottom-2.5 left-3.5 text-[8.5px] font-medium" style={{ color: st.accent }}>
+        View →
+      </p>
+    </>
+  );
 }
 
 export function HeroRing({

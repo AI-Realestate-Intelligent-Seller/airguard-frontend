@@ -12,7 +12,7 @@ import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-pref
 import { useIsDesktop } from "@/hooks/use-is-desktop";
 import { RAIL_ATTR, UNCOIL_SPEED, uncoilPath } from "@/lib/uncoil-path";
 // Artwork cropped from the approved design, "The Journey_ Find Your Path.png".
-import founderPortrait from "../../../public/images/site/journey/dr-james-operatory.webp";
+import chairside from "../../../public/images/site/airguard/chairside-dental.webp";
 import dentalImg from "../../../public/images/site/journey/dental.webp";
 import wellnessImg from "../../../public/images/site/journey/wellness.webp";
 import clinicImg from "../../../public/images/site/journey/institutional.webp";
@@ -23,7 +23,7 @@ import { EASE } from "@/lib/motion";
 /*
  * "The Journey": scrolls up from below the hero while the hero's ring swirls down its drain; the
  * stream comes out of this section's top edge and five cards open out into its rows, one by one.
- * Dr. James Orrington II fills the left half; on the right, "Find your path" lays out the
+ * The left half tells how it began, over a photo of AirGuard at the dental chair; on the right, "Find your path" lays out the
  * buyer pathways from the site brief. Once it has opened, the audiences play in by themselves,
  * one after another: a numbered node on the rail, use-case pills linking to the most relevant place, a
  * contextual photo, and the audience's conversion button. Credentials run along the bottom.
@@ -517,27 +517,40 @@ export function FamilyStory() {
         >
           {/* ── Left: the founder, full height, with the story over the photo (phones: after the cards) ── */}
           <div className="relative isolate flex min-h-[92svh] flex-col justify-end overflow-hidden bg-[linear-gradient(180deg,#0a1e3c_0%,#061224_60%)] text-white max-lg:order-2 lg:min-h-0">
-            {/* Dr. James in the operatory, across the top below the 72px navbar, fading into the navy */}
+            {/* AirGuard at the dental chair, full bleed behind the story: it fades up and settles as the
+                section arrives, and sinks behind the story under the navy grade. Over the working area
+                a pool of the XP's LED light breathes from cool white into its 470nm blue. */}
             <motion.div
-              className="absolute inset-x-0 top-[72px] -z-10 aspect-[695/340] overflow-hidden lg:aspect-auto lg:h-[48%]"
-              initial={reduceMotion ? false : { scale: 1.1 }}
-              whileInView={{ scale: 1 }}
-              viewport={{ once: true, amount: 0.3 }}
-              transition={{ duration: 1.6, ease: EASE }}
+              aria-hidden="true"
+              className="absolute inset-0 -z-30 overflow-hidden"
+              initial={reduceMotion ? false : { opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, amount: 0.25 }}
+              transition={{ duration: 1.4, ease: EASE }}
             >
-              <Image
-                src={founderPortrait}
-                alt="Dr. James Orrington II, DDS"
-                fill
-                sizes="(min-width: 1024px) 41vw, 100vw"
-                placeholder="blur"
-                className="object-cover object-[70%_25%]"
+              <motion.div
+                className="absolute inset-0"
+                initial={reduceMotion ? false : { scale: 1.12 }}
+                whileInView={{ scale: 1 }}
+                viewport={{ once: true, amount: 0.25 }}
+                transition={{ duration: 2.4, ease: EASE }}
+              >
+                <Image src={chairside} alt="" fill sizes="(min-width: 1024px) 41vw, 100vw" placeholder="blur" className="object-cover object-[42%_20%] lg:object-[32%_30%]" />
+              </motion.div>
+              {/* a cool navy cast so the white room sits in the panel's colours */}
+              <div className="absolute inset-0 bg-[#0a1e3c]/45 mix-blend-multiply" />
+              <motion.div
+                className="absolute left-[18%] top-[16%] h-[46%] w-[70%] mix-blend-screen [mask-image:radial-gradient(closest-side,#000_0%,#0007_45%,transparent_100%)]"
+                initial={{ backgroundColor: "#dfe9ff", opacity: 0.35 }}
+                animate={reduceMotion ? undefined : { backgroundColor: ["#dfe9ff", "#5d8bff", "#dfe9ff"], opacity: [0.35, 0.6, 0.35] }}
+                transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
               />
-              <div className="absolute inset-0 bg-[linear-gradient(0deg,#061224_0%,#06122400_45%)]" />
             </motion.div>
-            {/* Deep-navy grade: from the bottom for the story, and a cool blue cast over the photo */}
-            <div className="absolute inset-0 -z-10 bg-[linear-gradient(0deg,#061224_0%,#061224f2_30%,#0a1d3dcc_52%,#0b234a33_75%,transparent_100%)]" />
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(120%_70%_at_0%_100%,#0b2a5c99,transparent_60%)] mix-blend-screen" />
+            {/* room for the photo above the story */}
+            <div aria-hidden="true" className="mt-[72px] min-h-[240px] flex-1 lg:min-h-[200px]" />
+            {/* Deep-navy grade from the bottom, under the story */}
+            <div className="absolute inset-0 -z-20 bg-[linear-gradient(0deg,#061224_0%,#061224f2_30%,#0a1d3dcc_52%,#0b234a33_75%,transparent_100%)]" />
+            <div className="absolute inset-0 -z-20 bg-[radial-gradient(120%_70%_at_0%_100%,#0b2a5c99,transparent_60%)] mix-blend-screen" />
 
             {/* Light swoosh along the bottom */}
             <svg
@@ -567,7 +580,7 @@ export function FamilyStory() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
               transition={{ duration: 0.9, delay: 0.2, ease: EASE }}
-              className={`p-6 pt-48 md:p-10 lg:p-12 lg:[@media(max-height:820px)]:py-8`}
+              className={`p-6 md:p-10 lg:p-12 lg:pt-4 lg:[@media(max-height:820px)]:py-6`}
             >
               <p className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-[#9dc0ff]">
                 The Journey

@@ -8,7 +8,8 @@ import { BookStore } from "@/components/sections/book-store";
 import { ArcaneHerbs } from "@/components/sections/arcane-herbs";
 import { GetInTouch } from "@/components/sections/get-in-touch";
 import { Handoff } from "@/components/motion/handoff";
-import { RelayBridge } from "@/components/motion/relay-bridge";
+import { GenesisStory, InfusionStory } from "@/components/motion/stories";
+import { DropReveal, WaveReveal } from "@/components/motion/liquid-reveal";
 
 export default function Home() {
   return (
@@ -28,9 +29,14 @@ export default function Home() {
         light
         next={
           <>
-            <Aurora3D />
-            {/* King Hydrogen → Arcane Herb: streams of light run left to right through both */}
-            <RelayBridge />
+            {/* Before King Hydrogen (plays by itself): atoms → water molecules → DNA → a drop that falls into King Hydrogen */}
+            <GenesisStory />
+            {/* King Hydrogen emerges from where the drop struck the water */}
+            <DropReveal base={{ light: "radial-gradient(90% 70% at 70% 45%,#ffffff 0%,#eef2f9 55%,#e2e9f5 100%)", dark: "radial-gradient(70% 60% at 68% 48%,#1b2333 0%,#0d1119 55%,#06080c 100%)" }}>
+              <Aurora3D />
+            </DropReveal>
+            {/* King Hydrogen → Arcane Herb (plays by itself): water and leaves swirl, steep, bloom and rise */}
+            <InfusionStory />
             <Handoff
               eyebrow="Orrington Publishing"
               from="Wellness"
@@ -39,7 +45,10 @@ export default function Home() {
               line="The ideas behind our products, in books by Dr. James Orrington II."
               next={<BookStore />}
             >
-              <ArcaneHerbs />
+              {/* Arcane Herb emerges from where the drop struck the tea */}
+              <WaveReveal tint="#b8813f">
+                <ArcaneHerbs />
+              </WaveReveal>
             </Handoff>
           </>
         }

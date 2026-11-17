@@ -1,53 +1,57 @@
 import type { StaticImageData } from "next/image";
-import heroDental from "../../public/images/site/airguard/chairside-dental.webp";
-import featureAerosol from "../../public/images/site/airguard/feature-aerosol.webp";
-import featureFit from "../../public/images/site/airguard/feature-fit.webp";
-import featureInnovation from "../../public/images/site/airguard/feature-innovation.webp";
-import teamPhoto from "../../public/images/site/contact/team-photo.webp";
-import productXp from "../../public/images/site/airguard/product-xp-screen.webp";
-import productMp from "../../public/images/site/airguard/product-mp.webp";
-import productLt from "../../public/images/site/airguard/product-lt.webp";
-import productCh from "../../public/images/site/airguard/product-ch.webp";
-import monarch from "../../public/images/site/king-hydrogen/monarch.webp";
-import aurora from "../../public/images/site/king-hydrogen/aurora.webp";
+import xp from "../../public/images/site/ring/xp.webp";
+import mp from "../../public/images/site/ring/mp.webp";
+import lt from "../../public/images/site/ring/lt.webp";
+import ch from "../../public/images/site/ring/ch.webp";
+import aurora from "../../public/images/site/ring/aurora.webp";
+import monarch from "../../public/images/site/ring/monarch.webp";
+import founder from "../../public/images/site/ring/founder.webp";
+import simplestill from "../../public/images/site/ring/simplestill.webp";
+import kingGuard from "../../public/images/site/ring/king-guard.webp";
+import reishi from "../../public/images/site/ring/reishi.webp";
+import relaxing from "../../public/images/site/ring/relaxing.webp";
 import liquidAssets from "../../public/images/site/books/featured/liquid-assets.webp";
-import drDemo from "../../public/images/site/about/dr-orrington-demo.webp";
-import ltTesting from "../../public/images/site/about/lt-testing.webp";
-import teaPack from "../../public/images/site/arcane-herb/tea-pack-body.webp";
+import greatKing from "../../public/images/site/books/featured/the-great-king.webp";
+import treintaDias from "../../public/images/site/books/featured/30-dias.webp";
 
 /**
- * Card looks for the hero ring.
- * - photo:   full-bleed photo under a navy scrim
- * - product: AirGuard product on the light brand surface
- * - brand:   solid AirGuard blue with a headline
- * - night:   King Hydrogen's dark studio
- * - cover:   a book or pack on a warm surface
+ * The hero ring: one card per product the site presents, all in the same studio style.
+ * Product shots are trimmed copies in public/images/site/ring (made from the product photos
+ * used across the site); books show their covers.
+ * - brand sets the card's accent and surface: AirGuard, King Hydrogen, Arcane Herb, Orrington Publishing.
  */
-export type RingVariant = "photo" | "product" | "brand" | "night" | "cover";
+export type RingBrand = "airguard" | "king-hydrogen" | "arcane-herb" | "books";
 
 export type RingCard = {
   id: string;
-  variant: RingVariant;
+  brand: RingBrand;
   src: StaticImageData;
-  kicker: string;
   title: string;
+  /** A short line under the name (from the product menu). */
+  note: string;
   href: string;
 };
 
+export const ringBrandLabel: Record<RingBrand, string> = {
+  airguard: "AirGuard",
+  "king-hydrogen": "King Hydrogen",
+  "arcane-herb": "Arcane Herb",
+  books: "Orrington Publishing",
+};
+
 export const ringCards: RingCard[] = [
-  { id: "chairside", variant: "photo", src: heroDental, kicker: "Chairside", title: "Breathe easy", href: "#airguard-3d" },
-  { id: "xp", variant: "product", src: productXp, kicker: "Flagship", title: "AirGuard™ XP", href: "#airguard-3d" },
-  { id: "fda", variant: "brand", src: featureFit, kicker: "FDA Registered", title: "Protection at the source", href: "#airguard-3d" },
-  { id: "monarch", variant: "night", src: monarch, kicker: "King Hydrogen", title: "The Monarch", href: "#aurora-3d" },
-  { id: "aerosol", variant: "photo", src: featureAerosol, kicker: "Capture at the source", title: "Clean air, every patient", href: "#airguard-3d" },
-  { id: "mp", variant: "product", src: productMp, kicker: "Everyday operatory", title: "AirGuard™ MP", href: "#airguard-3d" },
-  { id: "demo", variant: "photo", src: drDemo, kicker: "Designed by a dentist", title: "Dr. James Orrington", href: "/about" },
-  { id: "book", variant: "cover", src: liquidAssets, kicker: "Orrington Publishing", title: "Liquid Assets", href: "#book-store" },
-  { id: "lt", variant: "product", src: productLt, kicker: "Lightweight", title: "AirGuard™ LT", href: "#airguard-3d" },
-  { id: "innovation", variant: "brand", src: featureInnovation, kicker: "Innovation", title: "Advancing dentistry", href: "#airguard-3d" },
-  { id: "testing", variant: "photo", src: ltTesting, kicker: "In practice", title: "Built for the chair", href: "#contact" },
-  { id: "aurora", variant: "night", src: aurora, kicker: "King Hydrogen", title: "Aurora Edition", href: "#aurora-3d" },
-  { id: "ch", variant: "product", src: productCh, kicker: "Compact", title: "AirGuard™ CH", href: "#airguard-3d" },
-  { id: "team", variant: "photo", src: teamPhoto, kicker: "Trusted by clinicians", title: "Protect your team", href: "#contact" },
-  { id: "herb", variant: "cover", src: teaPack, kicker: "Arcane Herb", title: "Small-batch botanicals", href: "#arcane-herbs" },
+  { id: "xp", brand: "airguard", src: xp, title: "AirGuard™ XP", note: "Flagship", href: "/products/xp" },
+  { id: "aurora", brand: "king-hydrogen", src: aurora, title: "Aurora Edition", note: "Illuminated glass", href: "/#aurora-3d" },
+  { id: "liquid-assets", brand: "books", src: liquidAssets, title: "Liquid Assets", note: "Dr. James Orrington", href: "/#book-store" },
+  { id: "reishi", brand: "arcane-herb", src: reishi, title: "Reishi Tonic", note: "Herbal blend · 7 sachets", href: "/#arcane-herbs" },
+  { id: "mp", brand: "airguard", src: mp, title: "AirGuard™ MP", note: "Everyday operatory", href: "/products/mp" },
+  { id: "monarch", brand: "king-hydrogen", src: monarch, title: "The Monarch", note: "Full-spectrum flagship", href: "/#aurora-3d" },
+  { id: "lt", brand: "airguard", src: lt, title: "AirGuard™ LT", note: "Lightweight", href: "/products/lt" },
+  { id: "founder", brand: "king-hydrogen", src: founder, title: "Founder Edition", note: "The original numbered run", href: "/#aurora-3d" },
+  { id: "great-king", brand: "books", src: greatKing, title: "The Great King", note: "Special edition", href: "/#book-store" },
+  { id: "ch", brand: "airguard", src: ch, title: "AirGuard™ CH", note: "Compact", href: "/products/ch" },
+  { id: "simplestill", brand: "king-hydrogen", src: simplestill, title: "SimpleStill", note: "Water distillation", href: "/#aurora-3d" },
+  { id: "relaxing", brand: "arcane-herb", src: relaxing, title: "Relaxing", note: "Herbal blend · 7 sachets", href: "/#arcane-herbs" },
+  { id: "king-guard", brand: "king-hydrogen", src: kingGuard, title: "King Guard", note: "Demo render", href: "/#aurora-3d" },
+  { id: "30-dias", brand: "books", src: treintaDias, title: "30 Días", note: "Edición en español", href: "/#book-store" },
 ];

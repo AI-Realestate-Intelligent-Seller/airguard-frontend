@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { animate, motion, useMotionValue, type MotionValue } from "motion/react";
 import { ArrowRight, Droplets, Leaf, Sprout } from "lucide-react";
 import { Section } from "@/components/layout/section";
 import { useMotionPreference as useReducedMotion } from "@/hooks/use-motion-preference";
@@ -12,9 +12,8 @@ import { EASE } from "@/lib/motion";
 
 /*
  * Arcane Herbs, after King Hydrogen (its blends can be prepared with King Hydrogen water),
- * before the Book Store. Its film (upright, light) is played by the
- * scroll the same way as the Book Store's: frames drawn as part of the section, forward with the
- * scroll, back when scrolling up, easing to rest when the scroll stops. A sachet rises through a
+ * before the Book Store. Its film (upright, light) plays by itself when the section comes into
+ * view (it rises out of the tea the particle story ends in), frames drawn as part of the section. A sachet rises through a
  * splash of water, an old photograph of a family herb shop, then the tea is poured: "Arcane Herbs,
  * Chinese Classical Formulas. Pure herbs, pure healing."
  *  - Upright screens (phones): the film fills the screen; the words and blends follow it.
@@ -24,8 +23,8 @@ import { EASE } from "@/lib/motion";
 const FRAMES = 240;
 const FILM_W = 720;
 const FILM_H = 1280;
-/** Share of the pinned scroll that plays the film; the rest holds its last frame. */
-const PLAY = 0.85;
+/** How long the film takes to play by itself (240 frames ≈ 30 fps). */
+const PLAY_SECONDS = 8;
 /** The film's own cream backdrop, so the section and film meet without a seam. */
 const CREAM = "#ebe6dc";
 const frameUrl = (i: number) => `/frames/arcane-herbs/${String(i + 1).padStart(3, "0")}.webp`;
@@ -244,8 +243,29 @@ export function ArcaneHerbs() {
   const reduceMotion = useReducedMotion();
   const portrait = useMedia(PORTRAIT_QUERY);
   const trackRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: trackRef, offset: ["start start", "end end"] });
-  const progress = useTransform(scrollYProgress, [0, PLAY], [0, 1], { clamp: true });
+  // The film plays by itself once the section is mostly on screen, and again when you come back.
+  const progress = useMotionValue(0);
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || reduceMotion) return;
+    let run: ReturnType<typeof animate> | null = null;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.intersectionRatio >= 0.5 && !run) run = animate(progress, 1, { duration: PLAY_SECONDS * (1 - progress.get()), ease: "linear" });
+        else if (e.intersectionRatio === 0 && run) {
+          run.stop();
+          run = null;
+          progress.set(0);
+        }
+      },
+      { threshold: [0, 0.5] }
+    );
+    io.observe(el);
+    return () => {
+      run?.stop();
+      io.disconnect();
+    };
+  }, [progress, reduceMotion]);
 
   const rise = (delay = 0) =>
     reduceMotion
@@ -269,7 +289,7 @@ export function ArcaneHerbs() {
         <p>Pure herbs, pure healing. 100% natural, potent and convenient, easy to prepare.</p>
       </div>
 
-      <div ref={trackRef} className={reduceMotion ? "relative h-[100svh]" : "relative h-[320svh]"}>
+      <div ref={trackRef} className="relative h-[100svh]">
         <div className="sticky top-0 h-[100svh] overflow-hidden">
           {portrait ? (
             <HerbFilm progress={progress} full still={reduceMotion} />
